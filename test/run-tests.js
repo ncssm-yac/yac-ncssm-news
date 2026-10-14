@@ -129,6 +129,10 @@ const BOARD = message('1a0c60ac085472de', {
 const PERSONAL = message('1a0000000000aaaa', {
   from: 'A Friend <friend@gmail.com>', subject: 'hi', date: '2026-10-01T10:00:00Z', text: 'PERSONAL CONTENT'
 });
+const SIGNUP = message('1a13ca64a2b943a0', {
+  from: 'NCSSM <communications@ncssm.edu>', subject: 'Email Signup Confirmation', date: '2026-10-14T23:10:00Z',
+  html: '<p>Thanks for signing up!</p><a href="https://lp.constantcontactpages.com/confirm?x=1">Confirm</a>'
+});
 const CONFIRM = message('1a0000000000bbbb', {
   from: 'NCSSM <confirmations@constantcontact.com>', subject: 'Please confirm', date: '2026-10-14T10:00:00Z', text: 'Confirm'
 });
@@ -186,13 +190,14 @@ let shared;
 // 4. Live run saves only allowlisted senders, cleanly.
 {
   const c = load();
-  const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail: [CATALYST, MORGANTON, BOARD, PERSONAL, CONFIRM] });
+  const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail: [CATALYST, MORGANTON, BOARD, PERSONAL, CONFIRM, SIGNUP] });
   check(run(c, 'saveNewsletters') === null, 'live run succeeds');
   const saved = env.json('folder1');
   check(saved.map((f) => f.name).sort().join(',') === '2026-09-23_1a0cdeec8bf1859f.json,2026-10-08_1a11d4e415ebfb2b.json', 'saves Catalyst and Morganton only');
   const all = Object.values(env.drive.files).map((f) => f.content).join('\n');
   check(!all.includes('PRIVATE BOARD CONTENT') && !all.includes('PERSONAL CONTENT'), 'no ignored mail content in Drive');
   check(!/pid=233|p=un|visitor\.constantcontact\.com/i.test(all), 'no unsubscribe link in Drive');
+  check(!all.includes('Thanks for signing up'), 'signup receipt not saved');
   check(!all.includes('ncssm.yac.yakkety@gmail.com'), 'recipient address not saved');
   const cat = JSON.parse(saved.find((f) => f.name.includes('1a11d4')).content);
   check(cat.from === 'communications@ncssm.edu' && cat.subject.startsWith('Catalyst') && cat.text.includes('No. 1 again – for 2027'), 'Catalyst record (UTF-8 kept)');
@@ -200,7 +205,7 @@ let shared;
   const mor = JSON.parse(saved.find((f) => f.name.includes('1a0cde')).content);
   check(mor.text.startsWith('Greetings, Family Day') && mor.links[0].url === 'https://r20.rs6.net/tn.jsp?f=001', 'Morganton: plain text preferred, byte-array bodies decoded');
   const hb = env.heartbeat('folder1');
-  check(hb.saved === 2 && hb.seen === 5 && hb.alreadySaved === 0 && hb.errors === 0, 'heartbeat counts');
+  check(hb.saved === 2 && hb.skipped === 1 && hb.seen === 6 && hb.alreadySaved === 0 && hb.errors === 0, 'heartbeat counts');
   check(JSON.stringify(hb.ignored) === JSON.stringify({ 'winslow@ncssm.edu': 1, 'gmail.com': 1, 'constantcontact.com': 1 }), 'heartbeat ignored: NCSSM senders in full, others by domain');
 
   // 5. A second run saves nothing new and rewrites the one heartbeat.

@@ -70,6 +70,13 @@ function runTests() {
   eq(ignoredBucket_('person@gmail.com'), 'gmail.com', 'others by domain only');
   eq(ignoredBucket_('junk'), '(no address)', 'no @');
 
+  // isSystemSubject_
+  ok(isSystemSubject_('Email Signup Confirmation'), 'signup receipt skipped');
+  ok(isSystemSubject_('Please confirm your subscription'), 'confirm request skipped');
+  ok(!isSystemSubject_('Catalyst: Alumni annual meeting'), 'newsletter kept');
+  ok(!isSystemSubject_('NCSSM-Morganton Update'), 'campus update kept');
+  ok(!isSystemSubject_(''), 'empty subject kept');
+
   // findBodyParts_
   var payload = { mimeType: 'multipart/mixed', parts: [
     { mimeType: 'multipart/alternative', parts: [

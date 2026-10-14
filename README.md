@@ -51,7 +51,7 @@ unwrapping, reading the Drive folder) and its scheduled workflow.
   "text": "From Chancellor Roberts ...",
   "links": [{ "text": "Niche.com", "url": "https://bbox.blackbaudhosting.com/...page.redir?target=..." }],
   "savedAt": "2026-10-15T13:00:04.000Z",
-  "savedBy": "yac-ncssm-news apps-script v1.0.0"
+  "savedBy": "yac-ncssm-news apps-script v1.0.1"
 }
 ```
 
@@ -66,8 +66,8 @@ collector and the yakkety skill in step.
 npm test
 ```
 
-Node only, no packages. Expected: `ALL PASSED (42 checks)` and
-`37/37 end-to-end checks passed.`
+Node only, no packages. Expected: `ALL PASSED (47 checks)` and
+`38/38 end-to-end checks passed.`
 
 ## Deploy
 

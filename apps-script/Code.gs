@@ -37,7 +37,7 @@
 // CONFIGURATION
 // ---------------------------------------------------------------------------
 
-var VERSION = '1.0.0';
+var VERSION = '1.0.1';
 var SCHEMA = 1;                    // bump when the saved JSON shape changes
 
 var DRY_RUN = true;                // default only; the DRY_RUN Script Property wins
@@ -57,6 +57,9 @@ var ALLOWED_SENDERS = [
   'kevin.baxter@ncssm.edu',                   // NCSSM-Morganton Update
   'ncssm-alumni-relations@alumni.ncssm.edu'   // NCSSM Alumni Network
 ];
+
+// Mail from an allowed sender that isn't news: signup receipts and the like.
+var SYSTEM_SUBJECT_RE = /signup confirmation|confirm your (email|subscription|signup)|please confirm|subscription confirm|welcome to (the )?(ncssm|catalyst)/i;
 
 var LOOKBACK_DAYS = 14;            // only look at mail this recent
 var MAX_RUN_MS = 4.5 * 60 * 1000;  // stop early; Apps Script kills runs at 6 min
@@ -114,6 +117,11 @@ function ignoredBucket_(email) {
   var domain = e.slice(at + 1);
   if (domain === 'ncssm.edu' || /\.ncssm\.edu$/.test(domain)) return e;
   return domain;
+}
+
+/** Signup receipts and similar from an allowed sender: not saved. */
+function isSystemSubject_(subject) {
+  return SYSTEM_SUBJECT_RE.test(String(subject || ''));
 }
 
 function headerValue_(headers, name) {
@@ -275,6 +283,7 @@ function buildHeartbeat_(stats, nowIso) {
     seen: stats.seen,
     saved: stats.saved,
     alreadySaved: stats.alreadySaved,
+    skipped: stats.skipped,
     ignored: stats.ignored,
     errors: stats.errors,
     errorSamples: stats.errorSamples,
@@ -283,7 +292,7 @@ function buildHeartbeat_(stats, nowIso) {
 }
 
 function newStats_() {
-  return { seen: 0, saved: 0, alreadySaved: 0, ignored: {}, errors: 0, errorSamples: [], stoppedEarly: false };
+  return { seen: 0, saved: 0, alreadySaved: 0, skipped: 0, ignored: {}, errors: 0, errorSamples: [], stoppedEarly: false };
 }
 
 function noteError_(stats, what, e) {
@@ -361,6 +370,11 @@ function saveNewslettersLocked_() {
       if (!isAllowedSender_(from.email, ALLOWED_SENDERS)) {
         var bucket = ignoredBucket_(from.email);
         stats.ignored[bucket] = (stats.ignored[bucket] || 0) + 1;
+        continue;
+      }
+      if (isSystemSubject_(headerValue_(msg.payload.headers, 'Subject'))) {
+        stats.skipped++;
+        Logger.log('Skipping signup/system mail: "' + headerValue_(msg.payload.headers, 'Subject') + '"');
         continue;
       }
       var parts = findBodyParts_(msg.payload);

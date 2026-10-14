@@ -1,0 +1,9 @@
+{
+  "name": "yac-ncssm-news",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Collects NCSSM news (newsletters, ncssm.edu, press) for Yakkety's weekly NCSSM News digest.",
+  "scripts": {
+    "test": "node test/run-tests.js"
+  }
+}

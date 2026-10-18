@@ -1,5 +1,9 @@
 /**
- * NCSSM News inbox (v1.0.0)
+ * NCSSM News inbox
+ *
+ * VERSION:   the VERSION constant below: the one place it is written. Every
+ *            saved file's savedBy and the heartbeat report it, so the running
+ *            copy can be told from this one.
  *
  * WHAT:      Runs hourly in the ncssm.yac.yakkety@gmail.com account. Saves
  *            each new NCSSM newsletter that reached the account as one JSON

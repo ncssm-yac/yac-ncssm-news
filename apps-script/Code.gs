@@ -156,8 +156,8 @@ function findBodyParts_(payload) {
 }
 
 var ENTITIES_ = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ',
-  rsquo: '’', lsquo: '‘', rdquo: '”', ldquo: '“',
-  ndash: '–', mdash: '—', hellip: '…', bull: '•', middot: '·' };
+  rsquo: '\u2019', lsquo: '\u2018', rdquo: '\u201d', ldquo: '\u201c',
+  ndash: '\u2013', mdash: '\u2014', hellip: '\u2026', bull: '\u2022', middot: '\u00b7' };
 
 function decodeEntities_(s) {
   return String(s).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, function (all, code) {
@@ -174,7 +174,7 @@ function decodeEntities_(s) {
 function tidyWhitespace_(s) {
   return String(s)
     .replace(/\r\n?/g, '\n')
-    .replace(/[ ​‌‍﻿͏­]/g, ' ')
+    .replace(/[\u00a0\u200b\u200c\u200d\ufeff\u034f\u00ad]/g, ' ')
     .replace(/[ \t\f\v]+/g, ' ')
     .split('\n').map(function (l) { return l.trim(); }).join('\n')
     .replace(/\n{3,}/g, '\n\n')
@@ -188,7 +188,7 @@ function htmlToText_(html) {
     .replace(/<(head|style|script|title)\b[\s\S]*?<\/\1>/gi, ' ')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|tr|li|h[1-6]|table|blockquote)>/gi, '\n')
-    .replace(/<li\b[^>]*>/gi, '\n• ')
+    .replace(/<li\b[^>]*>/gi, '\n\u2022 ')
     .replace(/<[^>]+>/g, ' ');
   return tidyWhitespace_(decodeEntities_(s));
 }

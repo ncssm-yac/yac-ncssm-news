@@ -33,6 +33,21 @@ try {
   failed = true;
 }
 
+// The header comment must not carry a version of its own: it went stale once
+// (v1.0.0 above VERSION = '1.0.1'), and the heartbeat is how a pasted copy is
+// told from the repo's.
+console.log('=== version ===');
+{
+  const src = fs.readFileSync(path.join(SRC, 'Code.gs'), 'utf8');
+  const header = src.slice(0, src.indexOf('*/'));
+  const stale = header.match(/\bv?\d+\.\d+\.\d+\b/);
+  if (stale) { console.error('FAIL: the header comment hard-codes a version (' + stale[0] + '); VERSION is the only place'); failed = true; }
+  else console.log('PASS the header carries no version of its own');
+  const m = src.match(/^var VERSION = '(\d+\.\d+\.\d+)';/m);
+  if (!m) { console.error('FAIL: no VERSION constant'); failed = true; }
+  else console.log('PASS VERSION is ' + m[1]);
+}
+
 // ---------------------------------------------------------------------------
 // Fakes
 // ---------------------------------------------------------------------------

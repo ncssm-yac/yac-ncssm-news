@@ -36,6 +36,20 @@ try {
 // The header comment must not carry a version of its own: it went stale once
 // (v1.0.0 above VERSION = '1.0.1'), and the heartbeat is how a pasted copy is
 // told from the repo's.
+console.log('=== source is plain ASCII ===');
+{
+  // Invisible characters (zero-width spaces, a soft hyphen) in a regex are
+  // easy to lose in a copy and paste and impossible to see in review: write
+  // them as \\uXXXX escapes instead.
+  let bad = 0;
+  for (const f of ['Code.gs', 'Tests.gs']) {
+    const text = fs.readFileSync(path.join(SRC, f), 'utf8');
+    const m = text.match(/[^\x09\x0a\x0d\x20-\x7e]/);
+    if (m) { console.error('FAIL: ' + f + ' has a non-ASCII character (U+' + m[0].codePointAt(0).toString(16).padStart(4, '0') + '); write it as an escape'); bad++; }
+  }
+  if (bad) failed = true; else console.log('PASS Code.gs and Tests.gs are plain ASCII');
+}
+
 console.log('=== version ===');
 {
   const src = fs.readFileSync(path.join(SRC, 'Code.gs'), 'utf8');

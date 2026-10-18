@@ -92,11 +92,11 @@ function runTests() {
   eq(findBodyParts_({ mimeType: 'text/plain', filename: 'a.txt', body: { data: 'X' } }).text, null, 'attachment skipped');
 
   // decodeEntities_ / htmlToText_
-  eq(decodeEntities_('A &amp; B &#8226; C &#x2019; &nbsp;&bogus;'), 'A & B • C ’  &bogus;', 'entities');
+  eq(decodeEntities_('A &amp; B &#8226; C &#x2019; &nbsp;&bogus;'), 'A & B \u2022 C \u2019  &bogus;', 'entities');
   var text = htmlToText_(T_CATALYST_HTML);
   ok(text.indexOf('From Chancellor Roberts\nNCSSM was named the No. 1 public high school & more.') === 0, 'html -> text paragraphs');
   ok(text.indexOf('color:red') < 0 && text.indexOf('Catalyst') < 0, 'style and title dropped');
-  ok(text.indexOf('• Oct. 16 • Annual Meeting') >= 0, 'list items bulleted');
+  ok(text.indexOf('\u2022 Oct. 16 \u2022 Annual Meeting') >= 0, 'list items bulleted');
 
   // extractLinks_
   var links = extractLinks_(T_CATALYST_HTML, 300);

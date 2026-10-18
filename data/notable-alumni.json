@@ -1,0 +1,212 @@
+{
+  "schema": 1,
+  "source": {
+    "name": "Wikipedia: North Carolina School of Science and Mathematics, \"Notable alumni\"",
+    "url": "https://en.wikipedia.org/wiki/North_Carolina_School_of_Science_and_Mathematics",
+    "retrievedOn": "2026-10-18",
+    "license": "Text from Wikipedia, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)",
+    "note": "Public figures and public facts only. A starting list: widening it is on the roadmap."
+  },
+  "alumni": [
+    {
+      "name": "Adam Falk",
+      "names": [
+        "Adam Falk"
+      ],
+      "classYear": 1983,
+      "description": "President of Williams College",
+      "wikipedia": "https://en.wikipedia.org/wiki/Adam_Falk",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Helen Moore",
+      "names": [
+        "Helen Moore"
+      ],
+      "classYear": 1984,
+      "description": "Mathematician",
+      "wikipedia": "https://en.wikipedia.org/wiki/Helen_Moore_(mathematician)",
+      "website": null,
+      "sharesNameWith": "mathematician"
+    },
+    {
+      "name": "Maya Ajmera",
+      "names": [
+        "Maya Ajmera"
+      ],
+      "classYear": 1985,
+      "description": "Founder and President of The Global Fund for Children",
+      "wikipedia": "https://en.wikipedia.org/wiki/Maya_Ajmera",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Harmeet Dhillon",
+      "names": [
+        "Harmeet Dhillon"
+      ],
+      "classYear": 1985,
+      "description": "Attorney currently serving as US Assistant Attorney General for the Civil Rights Division",
+      "wikipedia": "https://en.wikipedia.org/wiki/Harmeet_Dhillon",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Erica D. Smith",
+      "names": [
+        "Erica D. Smith"
+      ],
+      "classYear": 1988,
+      "description": "Member of the North Carolina Senate",
+      "wikipedia": "https://en.wikipedia.org/wiki/Erica_D._Smith",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Daniel P. Aldrich",
+      "names": [
+        "Daniel P. Aldrich"
+      ],
+      "classYear": 1992,
+      "description": "Academic in the fields of political science, public policy, and Asian studies",
+      "wikipedia": "https://en.wikipedia.org/wiki/Daniel_P._Aldrich",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Matt Welsh",
+      "names": [
+        "Matt Welsh"
+      ],
+      "classYear": 1992,
+      "description": "Former Gordon McKay Professor of Computer Science at Harvard University and author of several books",
+      "wikipedia": "https://en.wikipedia.org/wiki/Matt_Welsh_(computer_scientist)",
+      "website": null,
+      "sharesNameWith": "computer scientist"
+    },
+    {
+      "name": "Ralph Hise",
+      "names": [
+        "Ralph Hise"
+      ],
+      "classYear": 1994,
+      "description": "Member of North Carolina Senate",
+      "wikipedia": "https://en.wikipedia.org/wiki/Ralph_Hise",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Steven Schkolne",
+      "names": [
+        "Steven Schkolne"
+      ],
+      "classYear": 1994,
+      "description": "Computer scientist and inventor of speedcabling",
+      "wikipedia": "https://en.wikipedia.org/wiki/Steven_Schkolne",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Rhiannon Giddens",
+      "names": [
+        "Rhiannon Giddens"
+      ],
+      "classYear": 1995,
+      "description": "Member of the Grammy-winning Carolina Chocolate Drops",
+      "wikipedia": "https://en.wikipedia.org/wiki/Rhiannon_Giddens",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Scott Jacobson",
+      "names": [
+        "Scott Jacobson"
+      ],
+      "classYear": 1995,
+      "description": "Comedy writer (Bob's Burgers) and four-time Emmy winner",
+      "wikipedia": "https://en.wikipedia.org/wiki/Scott_Jacobson",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Christina Hammock Koch",
+      "names": [
+        "Christina Hammock Koch",
+        "Christina Koch"
+      ],
+      "classYear": 1997,
+      "description": "NASA astronaut and Flight Engineer on ISS Expeditions 59, 60, and 61 and Mission Specialist on the 2026 Artemis II Moon mission where she took the photograph Earthset",
+      "wikipedia": "https://en.wikipedia.org/wiki/Christina_Koch",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Chris Sembroski",
+      "names": [
+        "Chris Sembroski",
+        "Christopher Sembroski"
+      ],
+      "classYear": 1997,
+      "description": "Private astronaut on the Inspiration4 mission",
+      "wikipedia": "https://en.wikipedia.org/wiki/Christopher_Sembroski",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "B. Scott",
+      "names": [
+        "B. Scott"
+      ],
+      "classYear": 1999,
+      "description": "Internet celebrity, TV personality and blogger",
+      "wikipedia": "https://en.wikipedia.org/wiki/B._Scott",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Chris Hardwick",
+      "names": [
+        "Chris Hardwick"
+      ],
+      "classYear": 2002,
+      "description": "Competitive speedcuber",
+      "wikipedia": "https://en.wikipedia.org/wiki/Chris_Hardwick_(speedcuber)",
+      "website": null,
+      "sharesNameWith": "speedcuber"
+    },
+    {
+      "name": "Vann R. Newkirk II",
+      "names": [
+        "Vann R. Newkirk II"
+      ],
+      "classYear": 2006,
+      "description": "Journalist, staff writer at The Atlantic and health policy analyst",
+      "wikipedia": "https://en.wikipedia.org/wiki/Vann_R._Newkirk_II",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Janneke Parrish",
+      "names": [
+        "Janneke Parrish"
+      ],
+      "classYear": 2009,
+      "description": "Labor activist and #AppleToo leader",
+      "wikipedia": "https://en.wikipedia.org/wiki/Janneke_Parrish",
+      "website": null,
+      "sharesNameWith": null
+    },
+    {
+      "name": "Lamar Richardson",
+      "names": [
+        "Lamar Richardson"
+      ],
+      "classYear": 2011,
+      "description": "Tony award winning producer",
+      "wikipedia": null,
+      "website": "https://www.lamarrichardson.com/",
+      "sharesNameWith": null
+    }
+  ]
+}

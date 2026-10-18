@@ -33,6 +33,8 @@ Google News ────┴──► collector/  ──► items.json
 | `docs/SETUP.md` | Setting up the account, the script and the trigger |
 | `collector/` | `run.js` gathers everything into one `items.json`; `lib.js` has the parsers (pure, no network); `google.js` reads the Drive folder as the yakkety service account (read-only) |
 | `test/collector.test.js` | The collector's tests: parsers on made-up pages, then whole runs against a fake web and Drive |
+| `collector/alumni.js`, `data/notable-alumni.json` | The notable-alumni list, built from the "Notable alumni" section of NCSSM's Wikipedia page. See below |
+| `test/alumni.test.js` | Tests for that parser, and checks on the committed list |
 | `.github/workflows/collect.yml` | Daily early-warning run; keeps `items.json` as an artifact for 14 days |
 
 ## Collector
@@ -72,6 +74,33 @@ To run the daily workflow, add the repository secret `YAKKETY_GOOGLE_KEY` and
 the repository variable `NCSSM_NEWS_INBOX_FOLDER_ID`
 (`1Td05tbtTjo9N5ltUSEBXaN-uR6qm4Y5t`).
 
+## Notable alumni
+
+`data/notable-alumni.json` lists the alumni named on NCSSM's Wikipedia page:
+18 people, each with `name`, `names` (what to search for), `classYear`, a
+`description`, and a public source (`wikipedia` or `website`). It is a
+**starting list**: widening it is on the roadmap (see
+`docs/ncssm-news.md` in `ncssm-yac/yakkety`).
+
+```bash
+npm run alumni          # re-read Wikipedia and rewrite the file
+node collector/alumni.js --from-file page.wikitext --out data/notable-alumni.json
+```
+
+- **Public information only.** It holds public figures and facts from
+  Wikipedia. It never reads the Alumni Network directory, and no member
+  details go in this file.
+- **Licence.** The wording comes from Wikipedia (CC BY-SA 4.0), so the file
+  records its source, licence and retrieval date. Keep that if you edit it.
+- `sharesNameWith` is set when Wikipedia needed a "(speedcuber)"-style
+  suffix to tell people apart. A news search for such a name needs a second
+  clue, or it will find the wrong person.
+- A page that changes shape is an error (no section, or under 10 people), so
+  a quiet Wikipedia edit can't silently empty the list.
+- Wikimedia rate-limits shared addresses (it did in the cloud session that
+  built this). The script identifies itself and retries using `Retry-After`;
+  if it still fails, run it again later or from your own machine.
+
 ## Saved record
 
 `<YYYY-MM-DD>_<gmail message id>.json`:
@@ -105,7 +134,8 @@ npm test
 ```
 
 Node only, no packages. Expected: `ALL PASSED (47 checks)`,
-`38/38 end-to-end checks passed.` and `18 passed, 0 failed` for the collector.
+`38/38 end-to-end checks passed.`, `18 passed, 0 failed` for the collector and
+`9 passed, 0 failed` for the alumni list.
 
 ## Deploy
 

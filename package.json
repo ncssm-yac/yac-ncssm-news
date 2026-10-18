@@ -1,9 +1,10 @@
 {
   "name": "yac-ncssm-news",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Collects NCSSM news (newsletters, ncssm.edu, press) for Yakkety's weekly NCSSM News digest.",
   "scripts": {
-    "test": "node test/run-tests.js && node test/collector.test.js"
+    "test": "node test/run-tests.js && node test/collector.test.js && node test/alumni.test.js",
+    "alumni": "node collector/alumni.js --out data/notable-alumni.json"
   }
 }

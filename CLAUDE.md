@@ -12,6 +12,9 @@ live in `ncssm-yac/yakkety`, `ncssm-news` skill).
   inbox, read-only, and writes `items.json`. `lib.js` stays pure. It keeps no
   state, never logs article or newsletter text, and never prints a key.
   A source it can't read is an error, not an empty list.
+- `data/notable-alumni.json` is public figures and public facts from Wikipedia
+  only, with its source and licence. Never add details from the Alumni
+  Network directory, and never put member personal data in `data/`.
 - Pure logic stays separate from Gmail/Drive/Utilities calls and is tested
   offline. Practice mode (`DRY_RUN`) is the default, and every run must be
   safe to repeat.

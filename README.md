@@ -14,7 +14,8 @@ NCSSM newsletters ──► ncssm.yac.yakkety@gmail.com
                       Drive: "NCSSM News inbox"  (one JSON per newsletter
                          │                         + _heartbeat.json)
 ncssm.edu/news ─┐        │  yakkety service account, Viewer
-Google News ────┴──► collector/ (planned: daily GitHub Action)
+ncssm.edu/events┤        │
+Google News ────┴──► collector/  ──► items.json
                          ▼
                       Yakkety, Monday: split, score, draft ──► YAC IT
                                                                (then NCSSM News,
@@ -30,9 +31,46 @@ Google News ────┴──► collector/ (planned: daily GitHub Action)
 | `apps-script/appsscript.json` | Manifest: `gmail.readonly` and `drive.file` scopes, Gmail v1 and Drive v3 advanced services |
 | `test/run-tests.js` | Runs the unit tests, then `setup` and `saveNewsletters` end to end against a fake Gmail and Drive |
 | `docs/SETUP.md` | Setting up the account, the script and the trigger |
+| `collector/` | `run.js` gathers everything into one `items.json`; `lib.js` has the parsers (pure, no network); `google.js` reads the Drive folder as the yakkety service account (read-only) |
+| `test/collector.test.js` | The collector's tests: parsers on made-up pages, then whole runs against a fake web and Drive |
+| `.github/workflows/collect.yml` | Daily early-warning run; keeps `items.json` as an artifact for 14 days |
 
-Planned: `collector/` (ncssm.edu/news scraper, Google News filter, link
-unwrapping, reading the Drive folder) and its scheduled workflow.
+## Collector
+
+```bash
+node collector/run.js --out items.json            # all sources
+node collector/run.js --no-drive --out items.json # without the newsletter inbox
+```
+
+Options: `--days 10` (how far back articles go), `--ahead 28` (how far ahead
+events go), `--newsletter-days 35`, `--allow-partial` (exit 0 even if a
+source failed; Yakkety's Monday run uses it). It needs
+`YAKKETY_GOOGLE_KEY` (the service account's JSON key) and
+`NCSSM_NEWS_INBOX_FOLDER_ID` for the newsletters. Logs show counts only, not
+content or keys.
+
+It is **stateless**: every run rebuilds the last few days from scratch, so a
+missed run costs nothing and there is nothing to store.
+
+| Source | What it gives | Notes |
+| --- | --- | --- |
+| ncssm.edu/news | NCSSM's own stories, with the text of each, plus the outside coverage the page links to | Outside pages are read for their date (the list has none); ones with no findable date are left out |
+| ncssm.edu/events | Upcoming events: dates, place, sign-up link | Past and far-off events are filtered out |
+| Google News | Press coverage from two searches (NCSSM, and alumni described as NCSSM graduates) | Sports schedules, rosters and live streams are dropped. Links stay Google News links (their real addresses can't be unwrapped), and there's no article text, so each item says `textFetched: false` |
+| Newsletter inbox | The saved newsletters, with tracking links unwrapped (Blackbaud offline, Constant Contact by following the redirect) | Fails the run if the inbox script's heartbeat is over 6 hours old, reports errors, or is missing |
+
+`items.json` has `sources` (ok or error, per source), `counts`, and `items`:
+`kind` is `article`, `event` or `newsletter`. Each has `textFetched`, so
+Yakkety only summarizes text that was actually read. The same story from two
+sources is kept once, from the better one. A newsletter is never split here:
+it holds several stories, and Yakkety separates them.
+
+A broken source fails the run (and the daily **Collect** workflow). The usual
+cause is ncssm.edu changing its page layout: the error says which page.
+
+To run the daily workflow, add the repository secret `YAKKETY_GOOGLE_KEY` and
+the repository variable `NCSSM_NEWS_INBOX_FOLDER_ID`
+(`1Td05tbtTjo9N5ltUSEBXaN-uR6qm4Y5t`).
 
 ## Saved record
 
@@ -66,8 +104,8 @@ collector and the yakkety skill in step.
 npm test
 ```
 
-Node only, no packages. Expected: `ALL PASSED (47 checks)` and
-`38/38 end-to-end checks passed.`
+Node only, no packages. Expected: `ALL PASSED (47 checks)`,
+`38/38 end-to-end checks passed.` and `18 passed, 0 failed` for the collector.
 
 ## Deploy
 

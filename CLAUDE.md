@@ -8,6 +8,10 @@ live in `ncssm-yac/yakkety`, `ncssm-news` skill).
   `gmail.readonly` and `drive.file`; it must never send, label or delete
   mail. Only `ALLOWED_SENDERS` are saved, and unsubscribe-type links are
   never saved.
+- `collector/` reads public pages (ncssm.edu, Google News) and the Drive
+  inbox, read-only, and writes `items.json`. `lib.js` stays pure. It keeps no
+  state, never logs article or newsletter text, and never prints a key.
+  A source it can't read is an error, not an empty list.
 - Pure logic stays separate from Gmail/Drive/Utilities calls and is tested
   offline. Practice mode (`DRY_RUN`) is the default, and every run must be
   safe to repeat.

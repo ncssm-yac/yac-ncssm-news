@@ -5,7 +5,7 @@
  *            saved file's savedBy and the heartbeat report it, so the running
  *            copy can be told from this one.
  *
- * WHAT:      Runs hourly in the ncssm.yac.yakkety@gmail.com account. Saves
+ * WHAT:      Runs once a day in the ncssm.yac.yakkety@gmail.com account. Saves
  *            each new NCSSM newsletter that reached the account as one JSON
  *            file in the "NCSSM News inbox" Drive folder. The yac-ncssm-news
  *            collector reads that folder as the yakkety service account
@@ -24,7 +24,7 @@
  *            setup()). Whether a message was already saved is read from the
  *            folder (a file named "..._<messageId>.json"), never stored, so a
  *            failed save is retried next run and a re-run saves nothing twice.
- * TRIGGER:   Time-driven, hourly, on saveNewsletters. Added in the editor's
+ * TRIGGER:   Time-driven, daily (5am to 6am), on saveNewsletters. Added in the editor's
  *            Triggers panel. A run that finds the previous one still going
  *            exits (LockService).
  * HEARTBEAT: Every live run rewrites _heartbeat.json in the folder: when it

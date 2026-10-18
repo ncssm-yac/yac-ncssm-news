@@ -35,6 +35,8 @@ Google News ────┴──► collector/  ──► items.json
 | `test/collector.test.js` | The collector's tests: parsers on made-up pages, then whole runs against a fake web and Drive |
 | `collector/alumni.js`, `data/notable-alumni.json` | The notable-alumni list, built from the "Notable alumni" section of NCSSM's Wikipedia page. See below |
 | `test/alumni.test.js` | Tests for that parser, and checks on the committed list |
+| `digest/lib.js`, `digest/cli.js` | The plain-code edges of the Monday digest: check Yakkety's `digest.json`, build the YAC IT draft around it, turn an approved one into the post. See below |
+| `test/digest.test.js` | Tests for those |
 | `.github/workflows/collect.yml` | Daily early-warning run; keeps `items.json` as an artifact for 14 days |
 
 ## Collector
@@ -101,6 +103,38 @@ node collector/alumni.js --from-file page.wikitext --out data/notable-alumni.jso
   built this). The script identifies itself and retries using `Retry-After`;
   if it still fails, run it again later or from your own machine.
 
+## The Monday digest
+
+Yakkety (the `ncssm-news` skill in `ncssm-yac/yakkety`) writes `digest.json`;
+`digest/` is the plain code around it, which the two workflows in `yakkety`
+call (**NCSSM News digest**, Mondays 8 AM Eastern, and **Send approved NCSSM
+News post**).
+
+```json
+{ "week": "2026-10-12", "text": "<the post>", "items": [{ "id": "a1", "title": "...", "url": "https://..." }] }
+```
+
+A week with nothing worth posting is `{ "week": "2026-10-12", "quiet": true, "items": [] }`.
+A missing file is a failed run, never a quiet week.
+
+```bash
+node digest/cli.js check   --digest digest.json                     # is it usable?
+node digest/cli.js kind    --digest digest.json                     # "digest" or "quiet"
+node digest/cli.js draft   --digest digest.json --items items.json --run-id 123 --run-url https://...
+node digest/cli.js quiet   --digest digest.json --items items.json --run-url https://...
+node digest/cli.js approve --digest digest.json                     # the post for NCSSM News
+```
+
+- **The draft** is the post wrapped as "Draft NCSSM News digest, not sent
+  yet", with a line naming any collector source that failed (names only), a
+  link to the run with every story's score, and how to send it.
+- **Approval sends the skill's post unchanged.** What's sent is exactly what
+  was in the draft.
+- **`items`** lists every story the post carries, so next week's run can skip
+  them. A post with stories and an empty `items` is refused.
+- A post over 3,500 characters, a post that still has the draft wrapper, or a
+  link that isn't `http(s)` is refused rather than fixed.
+
 ## Saved record
 
 `<YYYY-MM-DD>_<gmail message id>.json`:
@@ -135,7 +169,7 @@ npm test
 
 Node only, no packages. Expected: `ALL PASSED (47 checks)`,
 `38/38 end-to-end checks passed.`, `18 passed, 0 failed` for the collector and
-`9 passed, 0 failed` for the alumni list.
+`9 passed, 0 failed` for the alumni list and `8 passed, 0 failed` for the digest.
 
 ## Deploy
 

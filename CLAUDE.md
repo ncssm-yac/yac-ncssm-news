@@ -12,6 +12,9 @@ live in `ncssm-yac/yakkety`, `ncssm-news` skill).
   inbox, read-only, and writes `items.json`. `lib.js` stays pure. It keeps no
   state, never logs article or newsletter text, and never prints a key.
   A source it can't read is an error, not an empty list.
+- `digest/` checks Yakkety's `digest.json` and builds the YAC IT draft. It never
+  edits the post: the draft and the approved post carry the skill's text
+  unchanged, and a digest that doesn't validate fails the run.
 - `data/notable-alumni.json` is public figures and public facts from Wikipedia
   only, with its source and licence. Never add details from the Alumni
   Network directory, and never put member personal data in `data/`.

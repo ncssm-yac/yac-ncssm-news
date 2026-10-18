@@ -1,0 +1,49 @@
+name: Collect
+
+# Every morning, run the collector against the real sources and keep the
+# result for two weeks. Nothing is posted anywhere: this is the early warning
+# that a source broke (ncssm.edu changed its layout, Google News stopped
+# answering, the inbox script went quiet) before Monday's digest needs it.
+# Yakkety's Monday run does its own collection with --allow-partial.
+on:
+  schedule:
+    - cron: '30 11 * * *'   # 7:30 AM Eastern (6:30 in winter)
+  workflow_dispatch:
+    inputs:
+      allow_partial:
+        description: Succeed even if a source fails
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Collect
+        run: |
+          if [ "$ALLOW_PARTIAL" = "true" ]; then set -- --allow-partial; fi
+          node collector/run.js --out items.json "$@"
+        env:
+          ALLOW_PARTIAL: ${{ inputs.allow_partial }}
+          YAKKETY_GOOGLE_KEY: ${{ secrets.YAKKETY_GOOGLE_KEY }}
+          NCSSM_NEWS_INBOX_FOLDER_ID: ${{ vars.NCSSM_NEWS_INBOX_FOLDER_ID }}
+      - name: Keep the result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: items
+          path: items.json
+          retention-days: 14
+          if-no-files-found: ignore

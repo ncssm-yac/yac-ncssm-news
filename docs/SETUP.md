@@ -64,8 +64,10 @@ Nothing is written. Check the list looks right.
 2. Run **saveNewsletters** once. The folder now has one `.json` file per
    newsletter from the last 14 days, plus `_heartbeat.json`.
 3. Triggers (clock icon) → Add Trigger → function `saveNewsletters`,
-   event source **Time-driven**, **Hour timer**, **Every hour**. Failure
-   notifications: **Notify me daily**.
+   event source **Time-driven**, **Day timer**, **5am to 6am**. Failure
+   notifications: **Notify me daily**. Once a day is enough: the digest runs
+   weekly, and the daily **Collect** workflow (7:30 AM Eastern) treats the
+   inbox as stopped when `_heartbeat.json` is over 30 hours old.
 
 ## 7. Later
 

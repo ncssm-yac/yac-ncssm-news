@@ -9,7 +9,7 @@ skill).
 
 ```
 NCSSM newsletters ──► ncssm.yac.yakkety@gmail.com
-                         │  apps-script/ (hourly, read-only Gmail)
+                         │  apps-script/ (daily, read-only Gmail)
                          ▼
                       Drive: "NCSSM News inbox"  (one JSON per newsletter
                          │                         + _heartbeat.json)
@@ -59,7 +59,7 @@ missed run costs nothing and there is nothing to store.
 | ncssm.edu/news | NCSSM's own stories, with the text of each, plus the outside coverage the page links to | Outside pages are read for their date (the list has none); ones with no findable date are left out |
 | ncssm.edu/events | Upcoming events: dates, place, sign-up link | Past and far-off events are filtered out |
 | Google News | Press coverage from two searches (NCSSM, and alumni described as NCSSM graduates) | Sports schedules, rosters and live streams are dropped. Links stay Google News links (their real addresses can't be unwrapped), and there's no article text, so each item says `textFetched: false` |
-| Newsletter inbox | The saved newsletters, with tracking links unwrapped (Blackbaud offline, Constant Contact by following the redirect) | Fails the run if the inbox script's heartbeat is over 6 hours old, reports errors, or is missing |
+| Newsletter inbox | The saved newsletters, with tracking links unwrapped (Blackbaud offline, Constant Contact by following the redirect) | Fails the run if the inbox script's heartbeat is over 30 hours old, reports errors, or is missing |
 
 `items.json` has `sources` (ok or error, per source), `counts`, and `items`:
 `kind` is `article`, `event` or `newsletter`. Each has `textFetched`, so

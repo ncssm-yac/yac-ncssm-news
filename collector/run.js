@@ -25,7 +25,9 @@ const GOOGLE_NEWS_QUERIES = [
   { name: 'NCSSM', q: '"NCSSM" OR "North Carolina School of Science and Mathematics"' },
   { name: 'alumni', q: '"NCSSM alumnus" OR "NCSSM alumna" OR "NCSSM graduate" OR "graduate of the North Carolina School of Science and Mathematics"' }
 ];
-const HEARTBEAT_MAX_AGE_HOURS = 6;
+// The inbox script runs once a day, so a day plus a few hours of slack. Older
+// means it stopped, and newsletters would silently stop arriving.
+const HEARTBEAT_MAX_AGE_HOURS = 30;
 
 const DEFAULTS = { days: 10, ahead: 28, newsletterDays: 35, maxArticles: 15, maxExternal: 12, maxEvents: 40, maxNewsletters: 40, maxResolve: 60, timeoutMs: 20000 };
 

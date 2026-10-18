@@ -309,6 +309,9 @@ const run = (web, drive, extra) => collect(Object.assign({ env: ENV, now: NOW, f
     assert.strictEqual(stale.sources.newsletters.ok, false);
     assert.ok(/hours ago/.test(stale.sources.newsletters.error));
     assert.strictEqual(stale.counts.newsletter, 1, 'newsletters are still passed on');
+    // The script runs once a day, so a heartbeat from yesterday evening is still healthy.
+    const daily = await run(web(), fakeDrive({ files: [{ name: '2026-10-08_m1.json', json: rec() }], heartbeat: Object.assign({}, HEALTHY, { lastRun: '2026-10-17T20:00:00.000Z' }) }));
+    assert.strictEqual(daily.sources.newsletters.ok, true, 'a 19-hour-old heartbeat is fine for a daily script');
     const errors = await run(web(), fakeDrive({ files: [], heartbeat: Object.assign({}, HEALTHY, { errors: 2 }) }));
     assert.ok(/2 error/.test(errors.sources.newsletters.error));
     const none = await run(web(), fakeDrive({ files: [] }));

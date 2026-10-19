@@ -74,6 +74,12 @@ Nothing is written. Check the list looks right.
 - **A newsletter isn't being saved.** Open `_heartbeat.json`. Its `ignored`
   list shows every NCSSM address the script skipped. Add the right one to
   `ALLOWED_SENDERS` here, merge, and paste the new `Code.gs`.
+- **Forwarding a newsletter by hand** (for testing, or one that arrived in a
+  personal inbox). Add a Script Property `FORWARDERS` with the forwarding
+  address(es), comma-separated. Mail from those addresses is judged by the
+  original sender in the "Forwarded message" header, which must be on
+  `ALLOWED_SENDERS` too; the forwarder's note and the To/Cc lines are not
+  saved. The addresses live only in the Script Property, never in the repo.
 - **Updating the script.** The script isn't deployed from GitHub: after a
   merge, paste the changed files into the editor and save. The `DRY_RUN`
   and `INBOX_FOLDER_ID` Script Properties survive a paste.

@@ -284,6 +284,33 @@ let shared;
 
 check(shared !== undefined, 'setup scenario ran');
 
+// 9. A hand-forwarded newsletter is judged by its original sender, and only
+// from a FORWARDERS address. All addresses here are made up.
+{
+  const fwd = (id, from, orig, subj) => message(id, {
+    from, subject: 'Fwd: ' + subj, date: '2026-10-19T14:00:00Z',
+    text: 'FYI\n\n---------- Forwarded message ---------\nFrom: ' + orig + '\nDate: Mon, Oct 12, 2026 at 9:00 AM\nSubject: ' + subj + '\nTo: <x@example.test>\n\nGreetings, Family Day was a hit! Unsubscribe <https://visitor.constantcontact.com/do?p=un&m=1>'
+  });
+  const GOOD = fwd('1b00000000000001', 'Pat Example <pat@example.test>', 'Kevin Baxter <kevin.baxter@ncssm.edu>', 'NCSSM-Morganton Update');
+  const OFFLIST = fwd('1b00000000000002', 'pat@example.test', 'Board <winslow@ncssm.edu>', 'Leadership Update');
+  const STRANGER = fwd('1b00000000000003', 'stranger@example.test', 'Kevin Baxter <kevin.baxter@ncssm.edu>', 'NCSSM-Morganton Update');
+  const NOTAFWD = message('1b00000000000004', { from: 'pat@example.test', subject: 'lunch?', date: '2026-10-19T14:00:00Z', text: 'PRIVATE NOTE' });
+  const c = load();
+  const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1', FORWARDERS: 'Pat@Example.test' }, mail: [GOOD, OFFLIST, STRANGER, NOTAFWD] });
+  const err = run(c, 'saveNewsletters');
+  check(err === null, 'forwarding run does not throw');
+  const saved = env.json('folder1');
+  check(saved.length === 1, 'only the forward of an allowed sender is saved (' + saved.length + ')');
+  const rec = saved[0] && JSON.parse(saved[0].content);
+  check(rec && rec.from === 'kevin.baxter@ncssm.edu' && rec.subject === 'NCSSM-Morganton Update' && rec.forwarded === true, 'saved with the original sender and subject');
+  check(!JSON.stringify(rec).includes('example.test'), 'the forwarder\'s address is not saved');
+  check(!JSON.stringify(rec).includes('p=un'), 'unsubscribe link still removed');
+  const hb = env.heartbeat('folder1');
+  check(hb.ignored['winslow@ncssm.edu'] === 1, 'a forward of an off-list NCSSM sender is counted by address');
+  check(hb.ignored['example.test'] === 1, 'a stranger\'s forward is counted by domain only');
+  check(hb.ignored['(forward with no original sender)'] === 1, 'a forwarder\'s ordinary mail is not saved');
+}
+
 console.log(pass + '/' + (pass + fail) + ' end-to-end checks passed.');
 if (fail > 0) failed = true;
 process.exit(failed ? 1 : 0);

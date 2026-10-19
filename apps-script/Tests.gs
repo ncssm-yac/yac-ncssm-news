@@ -133,6 +133,18 @@ function runTests() {
   var rec2 = buildRecord_(msg, { text: 'Plain body', html: '' }, 'x');
   eq([rec2.text, rec2.links], ['Plain body', []], 'plain text preferred; no html -> no links');
 
+  // parseList_ / parseForwarded_ / forwarded records
+  eq(parseList_(' Me@Example.test, you@example.test;junk '), ['me@example.test', 'you@example.test'], 'list parsed, lower-cased, junk dropped');
+  eq(parseList_(null), [], 'no forwarders');
+  var fwdGmail = 'FYI\n\n---------- Forwarded message ---------\nFrom: NCSSM <communications@ncssm.edu>\nDate: Mon, Oct 12, 2026 at 9:00 AM\nSubject: Catalyst: Alumni annual meeting\nTo: <someone@example.test>\n\nBody';
+  eq(parseForwarded_(fwdGmail), { name: 'NCSSM', email: 'communications@ncssm.edu', subject: 'Catalyst: Alumni annual meeting', body: 'Body' }, 'gmail forward header; note and To line left out of the body');
+  eq(parseForwarded_('Begin forwarded message:\n\nFrom: Terry <terry.lynch@ncssm.edu>\nSubject: Update\n').email, 'terry.lynch@ncssm.edu', 'apple mail forward header');
+  eq(parseForwarded_('Just a note, no forward'), null, 'no forward block');
+  eq(parseForwarded_('---------- Forwarded message ---------\nDate: today\n'), null, 'forward block without a From');
+  var recF = buildRecord_(msg, { text: 'x', html: '' }, 's', { name: 'NCSSM', email: 'communications@ncssm.edu', subject: 'Catalyst' });
+  eq([recF.from, recF.subject, recF.forwarded], ['communications@ncssm.edu', 'Catalyst', true], 'forwarded record uses the original sender and subject');
+  eq(rec.forwarded, undefined, 'ordinary record is not marked forwarded');
+
   // buildHeartbeat_
   var st = newStats_();
   noteError_(st, 'message m9', new Error('boom'));

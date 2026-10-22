@@ -1,6 +1,6 @@
 // The deterministic edges of the Monday digest. Yakkety (the ncssm-news skill)
 // writes digest.json; this checks it, builds the YAC IT draft around it, and
-// turns an approved one into the post for NCSSM News. Pure: no network, no
+// turns it into the post for NCSSM News. Pure: no network, no
 // secrets, same inputs give the same output.
 //
 // digest.json, as the skill writes it:
@@ -68,19 +68,32 @@ function buildDraft({ digest, items, runUrl, runId }) {
   return text;
 }
 
+/** The note for YAC IT after the digest has been posted to NCSSM News automatically. */
+function buildPosted({ digest, items, runUrl }) {
+  const problems = validateDigest(digest);
+  if (problems.length) throw new Error('digest.json is not usable: ' + problems.join('; '));
+  if (digest.quiet) throw new Error('a quiet week has nothing posted; use buildQuiet');
+  const n = digest.items.length;
+  return [
+    '*NCSSM News digest posted* to the NCSSM News space (' + n + (n === 1 ? ' story' : ' stories') + '). It goes out without approval; tell Yakkety what to change for next time.',
+    warning(failedSources(items)).trim(),
+    runUrl ? 'Every story and its score: ' + runUrl : ''
+  ].filter(Boolean).join('\n');
+}
+
 /** The message for YAC IT in a week with nothing worth posting. */
 function buildQuiet({ digest, items, runUrl }) {
   const problems = validateDigest(digest);
   if (problems.length) throw new Error('digest.json is not usable: ' + problems.join('; '));
   if (digest.quiet !== true) throw new Error('this week has a digest; use buildDraft');
   return [
-    '*NCSSM News: a quiet week.* No story scored high enough for the digest, so I haven\'t drafted one.',
+    '*NCSSM News: a quiet week.* No story scored high enough for the digest, so nothing was posted.',
     warning(failedSources(items)).trim(),
     runUrl ? 'Every story and its score: ' + runUrl : ''
   ].filter(Boolean).join('\n');
 }
 
-/** The post to send to NCSSM News once a person has approved the draft: the skill's post, unchanged. */
+/** The post for NCSSM News: the skill's post, unchanged. */
 function approvedPost(digest) {
   const problems = validateDigest(digest);
   if (problems.length) throw new Error('digest.json is not usable: ' + problems.join('; '));
@@ -88,4 +101,4 @@ function approvedPost(digest) {
   return digest.text.trim();
 }
 
-module.exports = { validateDigest, failedSources, buildDraft, buildQuiet, approvedPost, MAX_POST, MAX_MESSAGE, SEND_WORKFLOW };
+module.exports = { validateDigest, failedSources, buildDraft, buildPosted, buildQuiet, approvedPost, MAX_POST, MAX_MESSAGE, SEND_WORKFLOW };

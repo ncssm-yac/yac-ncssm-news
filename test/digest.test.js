@@ -86,9 +86,19 @@ const RUN = { runId: '39155887635', runUrl: 'https://github.com/ncssm-yac/yakket
     assert.throws(() => lib.buildDraft({ digest: fullPost, items: ITEMS_BAD, runId: RUN.runId, runUrl: 'https://x.test/' + 'a'.repeat(300) }), /YAC Chat allows/);
   });
 
+  await test('the note to YAC IT after an automatic post counts the stories and names missing sources', () => {
+    const t = lib.buildPosted({ digest: DIGEST, items: ITEMS_BAD, runUrl: RUN.runUrl });
+    assert.ok(t.startsWith('*NCSSM News digest posted*') && t.includes('(2 stories)'));
+    assert.ok(t.includes('without approval') && t.includes('ncssm.edu/events') && t.includes(RUN.runUrl));
+    assert.ok(!t.includes(POST), 'the note does not repeat the post');
+    assert.ok(!/GOOGLE_KEY|answered 500/.test(t));
+    assert.throws(() => lib.buildPosted({ digest: QUIET, items: ITEMS_OK }), /nothing posted/);
+    assert.throws(() => lib.buildPosted({ digest: { week: 'x' }, items: ITEMS_OK }), /not usable/);
+  });
+
   await test('a quiet week says so, and names missing sources', () => {
     const t = lib.buildQuiet({ digest: QUIET, items: ITEMS_BAD, runUrl: RUN.runUrl });
-    assert.ok(/quiet week/i.test(t) && /haven't drafted/.test(t));
+    assert.ok(/quiet week/i.test(t) && /nothing was posted/.test(t));
     assert.ok(t.includes('ncssm.edu/events') && t.includes(RUN.runUrl));
     assert.throws(() => lib.buildQuiet({ digest: DIGEST, items: ITEMS_OK }), /has a digest/);
   });
@@ -109,6 +119,8 @@ const RUN = { runId: '39155887635', runUrl: 'https://github.com/ncssm-yac/yakket
     assert.strictEqual(run('check', '--digest', d), 'ok');
     const draft = JSON.parse(run('draft', '--digest', d, '--items', i, '--run-id', RUN.runId, '--run-url', RUN.runUrl));
     assert.ok(draft.text.startsWith('*Draft NCSSM News digest, not sent yet*'));
+    assert.ok(JSON.parse(run('posted', '--digest', d, '--items', i, '--run-url', RUN.runUrl)).text.startsWith('*NCSSM News digest posted*'));
+    assert.throws(() => run('posted', '--digest', q, '--items', i), /nothing posted/);
     assert.ok(JSON.parse(run('quiet', '--digest', q, '--items', i, '--run-url', RUN.runUrl)).text.includes('quiet week'));
     assert.strictEqual(JSON.parse(run('approve', '--digest', d)).text, POST);
     assert.throws(() => run('approve', '--digest', q), /nothing to send/);

@@ -6,7 +6,8 @@
 //   node digest/cli.js check    --digest digest.json
 //   node digest/cli.js draft    --digest digest.json --items items.json --run-id 123 --run-url https://...
 //   node digest/cli.js quiet    --digest digest.json --items items.json --run-url https://...
-//   node digest/cli.js approve  --digest digest.json
+//   node digest/cli.js posted   --digest digest.json --items items.json --run-url https://...
+//   node digest/cli.js approve  --digest digest.json        the post for NCSSM News, unchanged
 //   node digest/cli.js kind     --digest digest.json        prints "digest" or "quiet"
 'use strict';
 
@@ -41,12 +42,14 @@ function run(argv, out = (s) => process.stdout.write(s + '\n')) {
     out(digest.quiet ? 'quiet' : 'digest');
   } else if (cmd === 'draft') {
     out(JSON.stringify({ text: lib.buildDraft({ digest, items: readJson(o.items, 'items'), runUrl: o['run-url'], runId: o['run-id'] }) }));
+  } else if (cmd === 'posted') {
+    out(JSON.stringify({ text: lib.buildPosted({ digest, items: readJson(o.items, 'items'), runUrl: o['run-url'] }) }));
   } else if (cmd === 'quiet') {
     out(JSON.stringify({ text: lib.buildQuiet({ digest, items: readJson(o.items, 'items'), runUrl: o['run-url'] }) }));
   } else if (cmd === 'approve') {
     out(JSON.stringify({ text: lib.approvedPost(digest) }));
   } else {
-    throw new Error('unknown command "' + cmd + '" (check, kind, draft, quiet, approve)');
+    throw new Error('unknown command "' + cmd + '" (check, kind, draft, posted, quiet, approve)');
   }
 }
 

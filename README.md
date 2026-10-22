@@ -122,14 +122,16 @@ node digest/cli.js check   --digest digest.json                     # is it usab
 node digest/cli.js kind    --digest digest.json                     # "digest" or "quiet"
 node digest/cli.js draft   --digest digest.json --items items.json --run-id 123 --run-url https://...
 node digest/cli.js quiet   --digest digest.json --items items.json --run-url https://...
+node digest/cli.js posted  --digest digest.json --items items.json --run-url https://...   # note for YAC IT after posting
 node digest/cli.js approve --digest digest.json                     # the post for NCSSM News
 ```
 
-- **The draft** is the post wrapped as "Draft NCSSM News digest, not sent
-  yet", with a line naming any collector source that failed (names only), a
-  link to the run with every story's score, and how to send it.
-- **Approval sends the skill's post unchanged.** What's sent is exactly what
-  was in the draft.
+- **The post goes out without approval** (owner's decision, Oct 22, 2026).
+  `approve` builds it: the skill's post, unchanged. After it is posted,
+  `posted` builds the note for YAC IT: how many stories, any collector
+  source that failed (names only), and a link to the run with every story's
+  score. `draft` (the post wrapped as "not sent yet") is still there for a
+  person who wants to hold a digest back.
 - **`items`** lists every story the post carries, so next week's run can skip
   them. A post with stories and an empty `items` is refused.
 - A post over 3,500 characters, a post that still has the draft wrapper, or a
@@ -169,7 +171,7 @@ npm test
 
 Node only, no packages. Expected: `ALL PASSED (47 checks)`,
 `38/38 end-to-end checks passed.`, `18 passed, 0 failed` for the collector and
-`9 passed, 0 failed` for the alumni list and `8 passed, 0 failed` for the digest.
+`9 passed, 0 failed` for the alumni list and `9 passed, 0 failed` for the digest.
 
 ## Deploy
 

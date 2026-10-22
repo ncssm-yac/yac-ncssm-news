@@ -1,6 +1,6 @@
 # yac-ncssm-news
 
-The deterministic half of **NCSSM News**: Yakkety's weekly Monday digest of
+The deterministic half of **NCSSM News**: Yakkety's biweekly digest of
 what's happening at NCSSM, for the NCSSM Young Alumni Council. This repo
 collects and cleans the news. Judging what's interesting, scoring it and
 writing the digest is Yakkety's job and lives in
@@ -46,9 +46,9 @@ node collector/run.js --out items.json            # all sources
 node collector/run.js --no-drive --out items.json # without the newsletter inbox
 ```
 
-Options: `--days 10` (how far back articles go), `--ahead 28` (how far ahead
+Options: `--days 10` (how far back articles go; the digest run uses 17), `--ahead 28` (how far ahead
 events go), `--newsletter-days 35`, `--allow-partial` (exit 0 even if a
-source failed; Yakkety's Monday run uses it). It needs
+source failed; Yakkety's digest run uses it). It needs
 `YAKKETY_GOOGLE_KEY` (the service account's JSON key) and
 `NCSSM_NEWS_INBOX_FOLDER_ID` for the newsletters. Logs show counts only, not
 content or keys.
@@ -103,11 +103,11 @@ node collector/alumni.js --from-file page.wikitext --out data/notable-alumni.jso
   built this). The script identifies itself and retries using `Retry-After`;
   if it still fails, run it again later or from your own machine.
 
-## The Monday digest
+## The biweekly digest
 
 Yakkety (the `ncssm-news` skill in `ncssm-yac/yakkety`) writes `digest.json`;
 `digest/` is the plain code around it, which the two workflows in `yakkety`
-call (**NCSSM News digest**, Mondays 8 AM Eastern, and **Send approved NCSSM
+call (**NCSSM News digest**, every other Monday 8 AM Eastern from Nov 2, 2026, and **Send approved NCSSM
 News post**).
 
 ```json

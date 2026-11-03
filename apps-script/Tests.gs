@@ -58,17 +58,32 @@ function runTests() {
   eq(parseAddress_(''), { name: '', email: '' }, 'empty');
 
   // isAllowedSender_
-  ok(isAllowedSender_('communications@ncssm.edu', ALLOWED_SENDERS), 'Catalyst allowed');
-  ok(isAllowedSender_('Kevin.Baxter@NCSSM.edu', ALLOWED_SENDERS), 'case-insensitive');
-  ok(!isAllowedSender_('winslow@ncssm.edu', ALLOWED_SENDERS), 'other NCSSM sender refused');
-  ok(!isAllowedSender_('communications@ncssm.edu.evil.com', ALLOWED_SENDERS), 'look-alike domain refused');
-  ok(!isAllowedSender_('', ALLOWED_SENDERS), 'empty refused');
+  ok(isAllowedSender_('communications@ncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'Catalyst allowed');
+  ok(isAllowedSender_('Kevin.Baxter@NCSSM.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'case-insensitive');
+  ok(isAllowedSender_('giving@ncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'Foundation newsletter allowed');
+  ok(isAllowedSender_('ncssm-alumni-relations@alumni.ncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'NCSSM subdomain allowed');
+  ok(!isAllowedSender_('communications@ncssm.edu.evil.com', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'look-alike domain refused');
+  ok(!isAllowedSender_('x@notncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'domain that merely ends in ncssm.edu refused');
+  ok(!isAllowedSender_('no-reply@accounts.google.com', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'Google mail refused');
+  ok(!isAllowedSender_('someone@gmail.com', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'personal address refused');
+  ok(!isAllowedSender_('', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'empty refused');
+  ok(isAllowedSender_('a@example.org', ['a@example.org'], []), 'an exact address still works');
 
   // ignoredBucket_
   eq(ignoredBucket_('someone@ncssm.edu'), 'someone@ncssm.edu', 'NCSSM sender kept in full');
   eq(ignoredBucket_('news@alumni.ncssm.edu'), 'news@alumni.ncssm.edu', 'NCSSM subdomain kept in full');
   eq(ignoredBucket_('person@gmail.com'), 'gmail.com', 'others by domain only');
   eq(ignoredBucket_('junk'), '(no address)', 'no @');
+
+  // forwards
+  eq(parseForwardSenders_(' Me@Example.test, you@example.test;junk '), ['me@example.test', 'you@example.test'], 'forward senders parsed');
+  eq(parseForwardSenders_(''), [], 'no forward senders');
+  ok(isForwardSubject_('Fwd: NCSSM-Morganton Update') && isForwardSubject_('FW: x') && isForwardSubject_(' fw : x'), 'forward subjects');
+  ok(!isForwardSubject_('Re: Fwd: x') && !isForwardSubject_('Update'), 'not a forward subject');
+  var T_FWD = 'FYI\n\n---------- Forwarded message ---------\nFrom: Kevin Baxter <kevin.baxter@ncssm.edu>\nDate: Mon\nTo: Me <me@example.test>\n\nHello';
+  eq(forwardedOriginalSender_(T_FWD).email, 'kevin.baxter@ncssm.edu', 'original sender read from the forwarded header');
+  eq(forwardedOriginalSender_('no forward here'), null, 'no forwarded header');
+  eq(scrubAddresses_('To: Me <ME@example.test> and me@example.test', ['me@example.test']), 'To: Me <(forwarder)> and (forwarder)', 'forwarder removed, case-insensitive');
 
   // isSystemSubject_
   ok(isSystemSubject_('Email Signup Confirmation'), 'signup receipt skipped');

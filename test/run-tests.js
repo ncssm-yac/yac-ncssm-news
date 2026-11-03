@@ -152,8 +152,8 @@ const MORGANTON = message('1a0cdeec8bf1859f', {
   bytes: true
 });
 const BOARD = message('1a0c60ac085472de', {
-  from: 'winslow@ncssm.edu', subject: '[NCSSM FBOD] NCSSM Leadership Update', date: '2026-09-21T22:15:00Z',
-  text: 'PRIVATE BOARD CONTENT'
+  from: 'NCSSM Foundation Team <giving@ncssm.edu>', subject: 'October Update: made-up foundation newsletter', date: '2026-09-21T22:15:00Z',
+  text: 'FOUNDATION UPDATE CONTENT'
 });
 const PERSONAL = message('1a0000000000aaaa', {
   from: 'A Friend <friend@gmail.com>', subject: 'hi', date: '2026-10-01T10:00:00Z', text: 'PERSONAL CONTENT'
@@ -216,15 +216,15 @@ let shared;
   shared = env;
 }
 
-// 4. Live run saves only allowlisted senders, cleanly.
+// 4. Live run saves mail from ncssm.edu (owner, Nov 3, 2026: all NCSSM mail is considered) and ignores everyone else, cleanly.
 {
   const c = load();
   const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail: [CATALYST, MORGANTON, BOARD, PERSONAL, CONFIRM, SIGNUP] });
   check(run(c, 'saveNewsletters') === null, 'live run succeeds');
   const saved = env.json('folder1');
-  check(saved.map((f) => f.name).sort().join(',') === '2026-09-23_1a0cdeec8bf1859f.json,2026-10-08_1a11d4e415ebfb2b.json', 'saves Catalyst and Morganton only');
+  check(saved.map((f) => f.name).sort().join(',') === '2026-09-21_1a0c60ac085472de.json,2026-09-23_1a0cdeec8bf1859f.json,2026-10-08_1a11d4e415ebfb2b.json', 'saves Catalyst, Morganton and the Foundation newsletter');
   const all = Object.values(env.drive.files).map((f) => f.content).join('\n');
-  check(!all.includes('PRIVATE BOARD CONTENT') && !all.includes('PERSONAL CONTENT'), 'no ignored mail content in Drive');
+  check(all.includes('FOUNDATION UPDATE CONTENT') && !all.includes('PERSONAL CONTENT'), 'ncssm.edu mail saved, ignored mail content not in Drive');
   check(!/pid=233|p=un|visitor\.constantcontact\.com/i.test(all), 'no unsubscribe link in Drive');
   check(!all.includes('Thanks for signing up'), 'signup receipt not saved');
   check(!all.includes('ncssm.yac.yakkety@gmail.com'), 'recipient address not saved');
@@ -234,15 +234,56 @@ let shared;
   const mor = JSON.parse(saved.find((f) => f.name.includes('1a0cde')).content);
   check(mor.text.startsWith('Greetings, Family Day') && mor.links[0].url === 'https://r20.rs6.net/tn.jsp?f=001', 'Morganton: plain text preferred, byte-array bodies decoded');
   const hb = env.heartbeat('folder1');
-  check(hb.saved === 2 && hb.skipped === 1 && hb.seen === 6 && hb.alreadySaved === 0 && hb.errors === 0, 'heartbeat counts');
-  check(JSON.stringify(hb.ignored) === JSON.stringify({ 'winslow@ncssm.edu': 1, 'gmail.com': 1, 'constantcontact.com': 1 }), 'heartbeat ignored: NCSSM senders in full, others by domain');
+  check(hb.saved === 3 && hb.skipped === 1 && hb.seen === 6 && hb.alreadySaved === 0 && hb.errors === 0, 'heartbeat counts');
+  check(JSON.stringify(hb.ignored) === JSON.stringify({ 'gmail.com': 1, 'constantcontact.com': 1 }), 'heartbeat ignored: non-NCSSM senders by domain');
 
   // 5. A second run saves nothing new and rewrites the one heartbeat.
   check(run(c, 'saveNewsletters') === null, 'second run succeeds');
-  check(env.json('folder1').length === 2, 'second run saves nothing twice');
+  check(env.json('folder1').length === 3, 'second run saves nothing twice');
   const hb2 = env.heartbeat('folder1');
-  check(hb2.saved === 0 && hb2.alreadySaved === 2, 'second heartbeat: already saved');
+  check(hb2.saved === 0 && hb2.alreadySaved === 3, 'second heartbeat: already saved');
   check(env.gets.filter((id) => id === CATALYST.id).length === 1, 'saved messages are not fetched again');
+}
+
+// 4b. Forwards from addresses in the FORWARD_SENDERS property are saved when the
+// original sender is NCSSM; the forwarder's address never reaches Drive.
+{
+  const FWD_OK = message('1a0000000000f001', {
+    from: 'Owner <owner.fake@example.test>', subject: 'Fwd: NCSSM-Durham Update', date: '2026-10-19T12:00:00Z',
+    text: 'FYI\n\n---------- Forwarded message ---------\nFrom: Terry Lynch <terry.lynch@ncssm.edu>\nDate: Mon\nSubject: NCSSM-Durham Update\nTo: Owner <owner.fake@example.test>\n\nDURHAM UPDATE BODY',
+    html: '<p>FYI</p><p>To: <a href="mailto:owner.fake@example.test">owner.fake@example.test</a></p><a href="https://example.test/news">Read</a>'
+  });
+  const FWD_PRIVATE = message('1a0000000000f002', {
+    from: 'Owner <owner.fake@example.test>', subject: 'Fwd: lunch', date: '2026-10-19T13:00:00Z',
+    text: '---------- Forwarded message ---------\nFrom: A Friend <friend@gmail.com>\n\nPRIVATE FORWARD CONTENT'
+  });
+  const NOT_FWD = message('1a0000000000f003', {
+    from: 'Owner <owner.fake@example.test>', subject: 'my own note', date: '2026-10-19T14:00:00Z', text: 'OWN NOTE CONTENT'
+  });
+  const OTHER = message('1a0000000000f004', {
+    from: 'Someone <other.fake@example.test>', subject: 'Fwd: NCSSM-Durham Update', date: '2026-10-19T15:00:00Z',
+    text: '---------- Forwarded message ---------\nFrom: Terry Lynch <terry.lynch@ncssm.edu>\n\nOTHER FORWARD CONTENT'
+  });
+  const mail = [FWD_OK, FWD_PRIVATE, NOT_FWD, OTHER];
+  // Without the property nothing is saved.
+  {
+    const c = load();
+    const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail });
+    check(run(c, 'saveNewsletters') === null && env.json('folder1').length === 0, 'forwards are ignored until FORWARD_SENDERS is set');
+  }
+  const c = load();
+  const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1', FORWARD_SENDERS: 'Owner.Fake@example.test' }, mail });
+  check(run(c, 'saveNewsletters') === null, 'live run with forwards succeeds');
+  const saved = env.json('folder1');
+  check(saved.length === 1, 'only the forwarded NCSSM newsletter is saved');
+  const rec = JSON.parse(saved[0].content);
+  check(rec.from === 'terry.lynch@ncssm.edu' && rec.fromName === 'Terry Lynch', 'record shows the original sender');
+  check(rec.text.includes('DURHAM UPDATE BODY'), 'forwarded body kept');
+  const all = Object.values(env.drive.files).map((f) => f.content).join('\n');
+  check(!/owner\.fake@example\.test/i.test(all), 'forwarder address is nowhere in Drive');
+  check(!all.includes('PRIVATE FORWARD CONTENT') && !all.includes('OWN NOTE CONTENT') && !all.includes('OTHER FORWARD CONTENT'), 'other forwards and own notes are not saved');
+  const hb = env.heartbeat('folder1');
+  check(hb.saved === 1 && hb.ignored['forward (not from NCSSM)'] === 1 && hb.ignored['example.test'] === 2, 'heartbeat counts the ignored forwards');
 }
 
 // 6. A failed message is reported, the rest still saved, and it is retried next run.
@@ -273,7 +314,7 @@ let shared;
 {
   const c = load();
   const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail: [CATALYST, MORGANTON, BOARD], pageSize: 1 });
-  check(run(c, 'saveNewsletters') === null && env.json('folder1').length === 2, 'reads every page of results');
+  check(run(c, 'saveNewsletters') === null && env.json('folder1').length === 3, 'reads every page of results');
   const c2 = load();
   const env2 = fakeEnv(c2, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail: [CATALYST] });
   vm.runInContext('MAX_RUN_MS = -1', c2);

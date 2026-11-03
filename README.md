@@ -26,7 +26,7 @@ Google News ────┴──► collector/  ──► items.json
 
 | Path | What |
 | --- | --- |
-| `apps-script/Code.gs` | Saves each newsletter from an allowlisted sender as JSON in the Drive folder. Read-only Gmail, Drive limited to its own folder, practice mode by default, one run at a time, never saves the same message twice, drops unsubscribe links. Entry points: `setup`, `saveNewsletters` |
+| `apps-script/Code.gs` | Saves each newsletter from an ncssm.edu sender (or an allowlisted address) as JSON in the Drive folder. Read-only Gmail, Drive limited to its own folder, practice mode by default, one run at a time, never saves the same message twice, drops unsubscribe links. Entry points: `setup`, `saveNewsletters` |
 | `apps-script/Tests.gs` | Unit tests for the pure logic (`runTests`, also runnable in the editor) |
 | `apps-script/appsscript.json` | Manifest: `gmail.readonly` and `drive.file` scopes, Gmail v1 and Drive v3 advanced services |
 | `test/run-tests.js` | Runs the unit tests, then `setup` and `saveNewsletters` end to end against a fake Gmail and Drive |

@@ -49,7 +49,9 @@ function dateRangeProblems(text, week) {
     if (/^\s*\*[^\u2022]/.test(line) && !/^\s*[\u2022\-]/.test(line)) break; // the next heading
     if (!STORY_LINE.test(line)) continue;
     n++;
-    const d = line.match(/^\s*(?:[\u2022\-*]|\d{1,2}\.)\s+\*?([A-Z][a-z]{2}) (\d{1,2}):/);
+    // The date sits at the end of the story's first line, "(Oct 21)" (the format since Nov 3, 2026),
+    // or leads it as "*Oct 21:*" (the earlier shape, still accepted).
+    const d = line.match(/\(([A-Z][a-z]{2}) (\d{1,2})\)\s*$/) || line.match(/^\s*(?:[\u2022\-*]|\d{1,2}\.)\s+\*?([A-Z][a-z]{2}) (\d{1,2}):/);
     if (!d || !(d[1] in MONTHS)) { problems.push('story ' + n + ' under "Last two weeks" has no date like "Oct 21:"'); continue; }
     const when = [endY, endY - 1].map((y) => dayKey(y, MONTHS[d[1]], Number(d[2]))).find((k) => k >= start && k <= end);
     if (when === undefined) problems.push('story ' + n + ' is dated ' + d[1] + ' ' + d[2] + ', outside the range ' + m[1] + ' ' + m[2] + '\u2013' + m[3] + ' ' + m[4] + ' (a story after the range belongs in the next digest)');

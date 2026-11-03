@@ -38,6 +38,25 @@ const RUN = { runId: '39155887635', runUrl: 'https://github.com/ncssm-yac/yakket
     assert.deepStrictEqual(lib.validateDigest(QUIET), []);
   });
 
+  await test('every story under "Last two weeks" is dated inside the heading\'s range', () => {
+    const post = (rows, heading) => '*Hi!*\n\n' + (heading || '*Last two weeks at NCSSM (Oct 20\u2013Nov 2)*') + '\n' + rows.join('\n') + '\n\n*Coming up*\n\u2022 *Nov 14: Concert:* x https://x.test/c';
+    const row = (d) => '\u2022 *' + d + ': A story:* Two sentences. https://x.test/s';
+    const probs = (text) => lib.dateRangeProblems(text, '2026-11-03');
+    assert.deepStrictEqual(probs(post([row('Oct 20'), row('Oct 28'), row('Nov 2')])), [], 'both ends of the range are inside');
+    assert.ok(probs(post([row('Oct 28'), row('Nov 3')])).some((p) => /story 2 is dated Nov 3, outside/.test(p)), 'the Nov 2 miss: a Nov 3 story');
+    assert.ok(probs(post([row('Oct 19')])).some((p) => /story 1 is dated Oct 19/.test(p)), 'a day before the range');
+    assert.ok(probs(post(['\u2022 *No date here:* x https://x.test'])).some((p) => /story 1 .* no date/.test(p)));
+    assert.ok(probs(post([row('Oct 28')], '*Last two weeks at NCSSM*')).some((p) => /no date range/.test(p)));
+    // The Coming up section may hold dates after the range, and a post in the older shape is left alone.
+    assert.deepStrictEqual(probs(post([row('Oct 28')])), []);
+    assert.deepStrictEqual(probs(POST), []);
+    // A range that crosses New Year.
+    assert.deepStrictEqual(lib.dateRangeProblems(post([row('Dec 30'), row('Jan 2')], '*Last two weeks at NCSSM (Dec 22\u2013Jan 4)*'), '2027-01-05'), []);
+    assert.ok(lib.dateRangeProblems(post([row('Jan 5')], '*Last two weeks at NCSSM (Dec 22\u2013Jan 4)*'), '2027-01-05').length === 1);
+    // The validator uses it.
+    assert.ok(lib.validateDigest(Object.assign({}, DIGEST, { week: '2026-11-03', text: post([row('Nov 3')]) })).some((p) => /outside the range/.test(p)));
+  });
+
   await test('what a bad digest.json is told it got wrong', () => {
     const bad = (d, re) => assert.ok(lib.validateDigest(d).some((p) => re.test(p)), JSON.stringify(d).slice(0, 80) + ' -> ' + lib.validateDigest(d));
     bad(null, /not an object/);

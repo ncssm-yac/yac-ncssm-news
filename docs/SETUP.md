@@ -75,6 +75,12 @@ Nothing is written. Check the list looks right.
 - **A newsletter isn't being saved.** Open `_heartbeat.json`. Its `ignored`
   list shows every NCSSM address the script skipped. Any ncssm.edu sender is saved already. For
   a sender outside ncssm.edu, add it to `ALLOWED_SENDERS` here, merge, and paste the new `Code.gs`.
+- **Forwarding a newsletter.** To have forwards saved, add your address to the
+  `FORWARD_SENDERS` Script Property (Project Settings, Script Properties; several
+  addresses can be separated by commas). Only messages whose subject starts
+  "Fwd:" or "Fw:" and whose original sender is an ncssm.edu address are saved,
+  as the original sender, with your address removed. Never put the address in
+  `Code.gs` or anywhere in GitHub.
 - **Updating the script.** The script isn't deployed from GitHub: after a
   merge, paste the changed files into the editor and save. The `DRY_RUN`
   and `INBOX_FOLDER_ID` Script Properties survive a paste.

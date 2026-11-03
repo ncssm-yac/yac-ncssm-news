@@ -75,6 +75,16 @@ function runTests() {
   eq(ignoredBucket_('person@gmail.com'), 'gmail.com', 'others by domain only');
   eq(ignoredBucket_('junk'), '(no address)', 'no @');
 
+  // forwards
+  eq(parseForwardSenders_(' Me@Example.test, you@example.test;junk '), ['me@example.test', 'you@example.test'], 'forward senders parsed');
+  eq(parseForwardSenders_(''), [], 'no forward senders');
+  ok(isForwardSubject_('Fwd: NCSSM-Morganton Update') && isForwardSubject_('FW: x') && isForwardSubject_(' fw : x'), 'forward subjects');
+  ok(!isForwardSubject_('Re: Fwd: x') && !isForwardSubject_('Update'), 'not a forward subject');
+  var T_FWD = 'FYI\n\n---------- Forwarded message ---------\nFrom: Kevin Baxter <kevin.baxter@ncssm.edu>\nDate: Mon\nTo: Me <me@example.test>\n\nHello';
+  eq(forwardedOriginalSender_(T_FWD).email, 'kevin.baxter@ncssm.edu', 'original sender read from the forwarded header');
+  eq(forwardedOriginalSender_('no forward here'), null, 'no forwarded header');
+  eq(scrubAddresses_('To: Me <ME@example.test> and me@example.test', ['me@example.test']), 'To: Me <(forwarder)> and (forwarder)', 'forwarder removed, case-insensitive');
+
   // isSystemSubject_
   ok(isSystemSubject_('Email Signup Confirmation'), 'signup receipt skipped');
   ok(isSystemSubject_('Please confirm your subscription'), 'confirm request skipped');

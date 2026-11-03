@@ -41,12 +41,13 @@
 // CONFIGURATION
 // ---------------------------------------------------------------------------
 
-var VERSION = '1.1.0';
+var VERSION = '1.2.0';
 var SCHEMA = 1;                    // bump when the saved JSON shape changes
 
 var DRY_RUN = true;                // default only; the DRY_RUN Script Property wins
 var DRY_RUN_KEY = 'DRY_RUN';
 var FOLDER_KEY = 'INBOX_FOLDER_ID';
+var FORWARD_KEY = 'FORWARD_SENDERS';  // Script Property: comma-separated addresses whose forwards are saved
 var FOLDER_NAME = 'NCSSM News inbox';
 var HEARTBEAT_NAME = '_heartbeat.json';
 
@@ -115,6 +116,46 @@ function isAllowedSender_(email, allowed, domains) {
     if (domain === d || domain.slice(-(d.length + 1)) === '.' + d) return true;
   }
   return false;
+}
+
+/**
+ * Forwards. Owner's decision (Nov 3, 2026): newsletters the owner forwards to
+ * this inbox are saved too. The forwarding addresses are personal, so they
+ * live in the FORWARD_SENDERS Script Property (set in the editor), never in
+ * this file or anywhere on GitHub. A message counts only when it comes from
+ * one of them, its subject is "Fwd:" or "Fw:", and the original sender named
+ * in the forwarded message is an allowed (ncssm.edu) sender. A forward of
+ * anything else is ignored. The saved record shows the original sender, and the
+ * forwarder's address is removed from the text and links.
+ */
+function parseForwardSenders_(value) {
+  var out = [];
+  String(value || '').split(/[,;\s]+/).forEach(function (s) {
+    s = s.trim().toLowerCase();
+    if (s && s.indexOf('@') > 0) out.push(s);
+  });
+  return out;
+}
+
+function isForwardSubject_(subject) {
+  return /^\s*(fwd?|fw)\s*:/i.test(String(subject || ''));
+}
+
+/** The "From:" of the first forwarded message in a body, as { name, email } or null. */
+function forwardedOriginalSender_(text) {
+  var m = String(text || '').match(/forwarded message[\s\-_]*\r?\n\s*from:[ \t]*([^\r\n]+)/i);
+  if (!m) return null;
+  var a = parseAddress_(m[1].trim());
+  return a.email && a.email.indexOf('@') > 0 ? a : null;
+}
+
+/** Removes each address (case-insensitive) from text. */
+function scrubAddresses_(text, addrs) {
+  var out = String(text || '');
+  (addrs || []).forEach(function (a) {
+    out = out.split(new RegExp(a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')).join('(forwarder)');
+  });
+  return out;
 }
 
 /**
@@ -266,10 +307,18 @@ function fileNameFor_(internalDateMs, messageId) {
  * The saved record. `msg` is a Gmail API message; `bodies` is
  * { text, html } as decoded strings (either may be '').
  */
-function buildRecord_(msg, bodies, savedAtIso) {
+function buildRecord_(msg, bodies, savedAtIso, forward) {
   var headers = (msg.payload && msg.payload.headers) || [];
-  var from = parseAddress_(headerValue_(headers, 'From'));
+  var from = forward ? forward.original : parseAddress_(headerValue_(headers, 'From'));
   var text = bodies.text ? bodies.text : htmlToText_(bodies.html);
+  text = cleanText_(text, MAX_TEXT_CHARS);
+  var links = extractLinks_(bodies.html, MAX_LINKS);
+  if (forward) {
+    text = scrubAddresses_(text, forward.forwarders);
+    links = links.filter(function (l) {
+      return scrubAddresses_(l.url + ' ' + l.text, forward.forwarders).indexOf('(forwarder)') < 0;
+    });
+  }
   return {
     schema: SCHEMA,
     source: 'email',
@@ -278,9 +327,9 @@ function buildRecord_(msg, bodies, savedAtIso) {
     receivedAt: new Date(Number(msg.internalDate)).toISOString(),
     from: from.email,
     fromName: from.name,
-    subject: headerValue_(headers, 'Subject'),
-    text: cleanText_(text, MAX_TEXT_CHARS),
-    links: extractLinks_(bodies.html, MAX_LINKS),
+    subject: scrubAddresses_(headerValue_(headers, 'Subject'), forward ? forward.forwarders : []),
+    text: text,
+    links: links,
     savedAt: savedAtIso,
     savedBy: 'yac-ncssm-news apps-script v' + VERSION
   };
@@ -365,6 +414,7 @@ function saveNewslettersLocked_() {
   var files = folderId ? listFolder_(folderId) : [];
   var savedIds = savedIdsFromNames_(files.map(function (f) { return f.name; }));
   var stats = newStats_();
+  var forwarders = parseForwardSenders_(props.getProperty(FORWARD_KEY));
 
   var ids = listMessageIds_(buildQuery_(LOOKBACK_DAYS));
   for (var i = 0; i < ids.length; i++) {
@@ -379,21 +429,34 @@ function saveNewslettersLocked_() {
     try {
       var msg = Gmail.Users.Messages.get('me', id, { format: 'full' });
       var from = parseAddress_(headerValue_(msg.payload.headers, 'From'));
-      if (!isAllowedSender_(from.email, ALLOWED_SENDERS, ALLOWED_DOMAINS)) {
-        var bucket = ignoredBucket_(from.email);
-        stats.ignored[bucket] = (stats.ignored[bucket] || 0) + 1;
-        continue;
-      }
-      if (isSystemSubject_(headerValue_(msg.payload.headers, 'Subject'))) {
-        stats.skipped++;
-        Logger.log('Skipping signup/system mail: "' + headerValue_(msg.payload.headers, 'Subject') + '"');
-        continue;
-      }
+      var subject = headerValue_(msg.payload.headers, 'Subject');
       var parts = findBodyParts_(msg.payload);
-      var record = buildRecord_(msg, {
+      var bodies = {
         text: parts.text ? decodeBody_(parts.text.body.data) : '',
         html: parts.html ? decodeBody_(parts.html.body.data) : ''
-      }, new Date().toISOString());
+      };
+      var forward = null;
+      if (!isAllowedSender_(from.email, ALLOWED_SENDERS, ALLOWED_DOMAINS)) {
+        if (forwarders.indexOf(from.email) >= 0 && isForwardSubject_(subject)) {
+          var original = forwardedOriginalSender_(bodies.text ? bodies.text : htmlToText_(bodies.html));
+          if (original && isAllowedSender_(original.email, ALLOWED_SENDERS, ALLOWED_DOMAINS)) {
+            forward = { original: original, forwarders: forwarders };
+          } else {
+            stats.ignored['forward (not from NCSSM)'] = (stats.ignored['forward (not from NCSSM)'] || 0) + 1;
+            continue;
+          }
+        } else {
+          var bucket = ignoredBucket_(from.email);
+          stats.ignored[bucket] = (stats.ignored[bucket] || 0) + 1;
+          continue;
+        }
+      }
+      if (isSystemSubject_(subject)) {
+        stats.skipped++;
+        Logger.log('Skipping signup/system mail: "' + subject + '"');
+        continue;
+      }
+      var record = buildRecord_(msg, bodies, new Date().toISOString(), forward);
       var name = fileNameFor_(msg.internalDate, id);
       if (dryRun) {
         Logger.log('[DRY-RUN] Would save ' + name + ': "' + record.subject + '" from ' + record.from +

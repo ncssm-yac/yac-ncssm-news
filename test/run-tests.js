@@ -245,6 +245,47 @@ let shared;
   check(env.gets.filter((id) => id === CATALYST.id).length === 1, 'saved messages are not fetched again');
 }
 
+// 4b. Forwards from addresses in the FORWARD_SENDERS property are saved when the
+// original sender is NCSSM; the forwarder's address never reaches Drive.
+{
+  const FWD_OK = message('1a0000000000f001', {
+    from: 'Owner <owner.fake@example.test>', subject: 'Fwd: NCSSM-Durham Update', date: '2026-10-19T12:00:00Z',
+    text: 'FYI\n\n---------- Forwarded message ---------\nFrom: Terry Lynch <terry.lynch@ncssm.edu>\nDate: Mon\nSubject: NCSSM-Durham Update\nTo: Owner <owner.fake@example.test>\n\nDURHAM UPDATE BODY',
+    html: '<p>FYI</p><p>To: <a href="mailto:owner.fake@example.test">owner.fake@example.test</a></p><a href="https://example.test/news">Read</a>'
+  });
+  const FWD_PRIVATE = message('1a0000000000f002', {
+    from: 'Owner <owner.fake@example.test>', subject: 'Fwd: lunch', date: '2026-10-19T13:00:00Z',
+    text: '---------- Forwarded message ---------\nFrom: A Friend <friend@gmail.com>\n\nPRIVATE FORWARD CONTENT'
+  });
+  const NOT_FWD = message('1a0000000000f003', {
+    from: 'Owner <owner.fake@example.test>', subject: 'my own note', date: '2026-10-19T14:00:00Z', text: 'OWN NOTE CONTENT'
+  });
+  const OTHER = message('1a0000000000f004', {
+    from: 'Someone <other.fake@example.test>', subject: 'Fwd: NCSSM-Durham Update', date: '2026-10-19T15:00:00Z',
+    text: '---------- Forwarded message ---------\nFrom: Terry Lynch <terry.lynch@ncssm.edu>\n\nOTHER FORWARD CONTENT'
+  });
+  const mail = [FWD_OK, FWD_PRIVATE, NOT_FWD, OTHER];
+  // Without the property nothing is saved.
+  {
+    const c = load();
+    const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1' }, mail });
+    check(run(c, 'saveNewsletters') === null && env.json('folder1').length === 0, 'forwards are ignored until FORWARD_SENDERS is set');
+  }
+  const c = load();
+  const env = fakeEnv(c, { props: { DRY_RUN: 'false', INBOX_FOLDER_ID: 'folder1', FORWARD_SENDERS: 'Owner.Fake@example.test' }, mail });
+  check(run(c, 'saveNewsletters') === null, 'live run with forwards succeeds');
+  const saved = env.json('folder1');
+  check(saved.length === 1, 'only the forwarded NCSSM newsletter is saved');
+  const rec = JSON.parse(saved[0].content);
+  check(rec.from === 'terry.lynch@ncssm.edu' && rec.fromName === 'Terry Lynch', 'record shows the original sender');
+  check(rec.text.includes('DURHAM UPDATE BODY'), 'forwarded body kept');
+  const all = Object.values(env.drive.files).map((f) => f.content).join('\n');
+  check(!/owner\.fake@example\.test/i.test(all), 'forwarder address is nowhere in Drive');
+  check(!all.includes('PRIVATE FORWARD CONTENT') && !all.includes('OWN NOTE CONTENT') && !all.includes('OTHER FORWARD CONTENT'), 'other forwards and own notes are not saved');
+  const hb = env.heartbeat('folder1');
+  check(hb.saved === 1 && hb.ignored['forward (not from NCSSM)'] === 1 && hb.ignored['example.test'] === 2, 'heartbeat counts the ignored forwards');
+}
+
 // 6. A failed message is reported, the rest still saved, and it is retried next run.
 {
   const c = load();

@@ -57,6 +57,17 @@ const RUN = { runId: '39155887635', runUrl: 'https://github.com/ncssm-yac/yakket
     assert.ok(lib.validateDigest(Object.assign({}, DIGEST, { week: '2026-11-03', text: post([row('Nov 3')]) })).some((p) => /outside the range/.test(p)));
   });
 
+  await test('a numbered post with linked titles is a normal post, and its dates are checked too', () => {
+    const NUM = '*Hi!*\n\n*Last two weeks at NCSSM (Oct 20\u2013Nov 2)*\n\n1. *Oct 21:* <https://x.test/a|A big story> \u2013 Two sentences here. Another one.\n\n2. *Oct 28:* <https://x.test/b|Another story> \u2013 Two sentences here. Another one.\n\n*Coming up*\n\n1. *Nov 14:* <https://x.test/c|A concert> \u2013 Free. Livestreamed.';
+    const good = { week: '2026-11-03', text: NUM, items: [{ id: 'a', title: 'A', url: 'https://x.test/a' }] };
+    assert.deepStrictEqual(lib.validateDigest(good), []);
+    const late = Object.assign({}, good, { text: NUM.replace('*Oct 28:*', '*Nov 3:*') });
+    assert.ok(lib.validateDigest(late).some((p) => /story 2 is dated Nov 3, outside/.test(p)), 'numbered stories are range-checked');
+    const nodate = Object.assign({}, good, { text: NUM.replace('1. *Oct 21:*', '1.') });
+    assert.ok(lib.validateDigest(nodate).some((p) => /story 1 .*no date|no stories/.test(p)));
+    assert.deepStrictEqual(lib.validateDigest(Object.assign({}, good, { text: 'Just a paragraph, no list.' })).filter((p) => /no stories/.test(p)).length, 1);
+  });
+
   await test('what a bad digest.json is told it got wrong', () => {
     const bad = (d, re) => assert.ok(lib.validateDigest(d).some((p) => re.test(p)), JSON.stringify(d).slice(0, 80) + ' -> ' + lib.validateDigest(d));
     bad(null, /not an object/);

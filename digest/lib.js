@@ -16,6 +16,8 @@ const SEND_WORKFLOW = 'Send approved NCSSM News post';
 const isDay = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
 const isUrl = (s) => typeof s === 'string' && /^https?:\/\/\S+$/.test(s);
 
+// A story line: a bullet, or a number like "1." (the post is a numbered list since Nov 3, 2026).
+const STORY_LINE = /^\s*(?:[\u2022\-*]|\d{1,2}\.)\s+\S/;
 const MONTHS = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
 const dayKey = (y, m, d) => Date.UTC(y, m, d);
 
@@ -45,9 +47,9 @@ function dateRangeProblems(text, week) {
   for (let i = at + 1; i < lines.length; i++) {
     const line = lines[i];
     if (/^\s*\*[^\u2022]/.test(line) && !/^\s*[\u2022\-]/.test(line)) break; // the next heading
-    if (!/^\s*[\u2022\-*]\s+\S/.test(line)) continue;
+    if (!STORY_LINE.test(line)) continue;
     n++;
-    const d = line.match(/^\s*[\u2022\-*]\s+\*?([A-Z][a-z]{2}) (\d{1,2}):/);
+    const d = line.match(/^\s*(?:[\u2022\-*]|\d{1,2}\.)\s+\*?([A-Z][a-z]{2}) (\d{1,2}):/);
     if (!d || !(d[1] in MONTHS)) { problems.push('story ' + n + ' under "Last two weeks" has no date like "Oct 21:"'); continue; }
     const when = [endY, endY - 1].map((y) => dayKey(y, MONTHS[d[1]], Number(d[2]))).find((k) => k >= start && k <= end);
     if (when === undefined) problems.push('story ' + n + ' is dated ' + d[1] + ' ' + d[2] + ', outside the range ' + m[1] + ' ' + m[2] + '\u2013' + m[3] + ' ' + m[4] + ' (a story after the range belongs in the next digest)');
@@ -72,7 +74,7 @@ function validateDigest(d) {
   const text = typeof d.text === 'string' ? d.text.trim() : '';
   if (!text) problems.push('"text" is empty (a week with nothing to post must say "quiet": true)');
   if (text.length > MAX_POST) problems.push('the post is ' + text.length + ' characters (max ' + MAX_POST + ')');
-  if (text && !/^\s*[•\-*]\s+\S/m.test(text)) problems.push('the post has no stories');
+  if (text && !new RegExp(STORY_LINE.source, 'm').test(text)) problems.push('the post has no stories');
   if (text) problems.push.apply(problems, dateRangeProblems(text, d.week));
   if (/not sent yet/i.test(text)) problems.push('the post carries the draft wrapper; "text" must be the post alone');
   if (Array.isArray(d.items) && text && d.items.length === 0) problems.push('the post has stories but "items" is empty, so next week could not skip them');

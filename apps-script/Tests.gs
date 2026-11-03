@@ -58,11 +58,16 @@ function runTests() {
   eq(parseAddress_(''), { name: '', email: '' }, 'empty');
 
   // isAllowedSender_
-  ok(isAllowedSender_('communications@ncssm.edu', ALLOWED_SENDERS), 'Catalyst allowed');
-  ok(isAllowedSender_('Kevin.Baxter@NCSSM.edu', ALLOWED_SENDERS), 'case-insensitive');
-  ok(!isAllowedSender_('winslow@ncssm.edu', ALLOWED_SENDERS), 'other NCSSM sender refused');
-  ok(!isAllowedSender_('communications@ncssm.edu.evil.com', ALLOWED_SENDERS), 'look-alike domain refused');
-  ok(!isAllowedSender_('', ALLOWED_SENDERS), 'empty refused');
+  ok(isAllowedSender_('communications@ncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'Catalyst allowed');
+  ok(isAllowedSender_('Kevin.Baxter@NCSSM.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'case-insensitive');
+  ok(isAllowedSender_('giving@ncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'Foundation newsletter allowed');
+  ok(isAllowedSender_('ncssm-alumni-relations@alumni.ncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'NCSSM subdomain allowed');
+  ok(!isAllowedSender_('communications@ncssm.edu.evil.com', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'look-alike domain refused');
+  ok(!isAllowedSender_('x@notncssm.edu', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'domain that merely ends in ncssm.edu refused');
+  ok(!isAllowedSender_('no-reply@accounts.google.com', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'Google mail refused');
+  ok(!isAllowedSender_('someone@gmail.com', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'personal address refused');
+  ok(!isAllowedSender_('', ALLOWED_SENDERS, ALLOWED_DOMAINS), 'empty refused');
+  ok(isAllowedSender_('a@example.org', ['a@example.org'], []), 'an exact address still works');
 
   // ignoredBucket_
   eq(ignoredBucket_('someone@ncssm.edu'), 'someone@ncssm.edu', 'NCSSM sender kept in full');

@@ -6,8 +6,10 @@ live in `ncssm-yac/yakkety`, `ncssm-news` skill).
 
 - `apps-script/` runs in ncssm.yac.yakkety@gmail.com. Keep its scopes to
   `gmail.readonly` and `drive.file`; it must never send, label or delete
-  mail. Only `ALLOWED_SENDERS` are saved, and unsubscribe-type links are
-  never saved.
+  mail. Only mail from `ALLOWED_DOMAINS` (ncssm.edu and its subdomains) or an exact
+  `ALLOWED_SENDERS` address is saved (owner, Nov 3, 2026: this inbox is
+  dedicated and low-sensitivity, so all NCSSM mail is considered, including the
+  Foundation newsletter), and unsubscribe-type links are never saved.
 - `collector/` reads public pages (ncssm.edu, Google News) and the Drive
   inbox, read-only, and writes `items.json`. `lib.js` stays pure. It keeps no
   state, never logs article or newsletter text, and never prints a key.

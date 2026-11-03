@@ -41,7 +41,7 @@
 // CONFIGURATION
 // ---------------------------------------------------------------------------
 
-var VERSION = '1.0.1';
+var VERSION = '1.1.0';
 var SCHEMA = 1;                    // bump when the saved JSON shape changes
 
 var DRY_RUN = true;                // default only; the DRY_RUN Script Property wins
@@ -53,14 +53,14 @@ var HEARTBEAT_NAME = '_heartbeat.json';
 // The collector's identity. setup() gives it Viewer on the folder.
 var READER_EMAIL = 'yakkety@ncssm-yac.iam.gserviceaccount.com';
 
-// Exact sender addresses whose mail is saved. Add a newsletter by adding its
-// From address here (the heartbeat lists NCSSM senders it ignored).
-var ALLOWED_SENDERS = [
-  'communications@ncssm.edu',                 // Catalyst
-  'terry.lynch@ncssm.edu',                    // NCSSM-Durham Update
-  'kevin.baxter@ncssm.edu',                   // NCSSM-Morganton Update
-  'ncssm-alumni-relations@alumni.ncssm.edu'   // NCSSM Alumni Network
-];
+// Senders whose mail is saved. Owner's decision (Nov 3, 2026): this inbox only
+// receives NCSSM mail and is much less sensitive than the owner's personal
+// one, so all NCSSM mail is considered. Anything from ncssm.edu or one of its
+// subdomains (including giving@ncssm.edu, the Foundation newsletter) is
+// saved. Google's own mail, marketing and anyone else are still ignored.
+// ALLOWED_SENDERS is for an exact address outside those domains.
+var ALLOWED_DOMAINS = ['ncssm.edu'];
+var ALLOWED_SENDERS = [];
 
 // Mail from an allowed sender that isn't news: signup receipts and the like.
 var SYSTEM_SUBJECT_RE = /signup confirmation|confirm your (email|subscription|signup)|please confirm|subscription confirm|welcome to (the )?(ncssm|catalyst)/i;
@@ -101,10 +101,18 @@ function parseAddress_(header) {
   return { name: '', email: s.toLowerCase() };
 }
 
-function isAllowedSender_(email, allowed) {
+function isAllowedSender_(email, allowed, domains) {
   var e = String(email || '').toLowerCase();
-  for (var i = 0; i < allowed.length; i++) {
+  for (var i = 0; i < (allowed || []).length; i++) {
     if (allowed[i].toLowerCase() === e) return true;
+  }
+  var at = e.lastIndexOf('@');
+  if (at < 1) return false;
+  var domain = e.slice(at + 1);
+  for (var j = 0; j < (domains || []).length; j++) {
+    var d = domains[j].toLowerCase();
+    // The domain itself or a subdomain; not a look-alike such as ncssm.edu.evil.com.
+    if (domain === d || domain.slice(-(d.length + 1)) === '.' + d) return true;
   }
   return false;
 }
@@ -371,7 +379,7 @@ function saveNewslettersLocked_() {
     try {
       var msg = Gmail.Users.Messages.get('me', id, { format: 'full' });
       var from = parseAddress_(headerValue_(msg.payload.headers, 'From'));
-      if (!isAllowedSender_(from.email, ALLOWED_SENDERS)) {
+      if (!isAllowedSender_(from.email, ALLOWED_SENDERS, ALLOWED_DOMAINS)) {
         var bucket = ignoredBucket_(from.email);
         stats.ignored[bucket] = (stats.ignored[bucket] || 0) + 1;
         continue;

@@ -16,11 +16,12 @@ once.
 At <https://www.ncssm.edu/newsletter-signup>, subscribe
 `ncssm.yac.yakkety@gmail.com` to:
 
-| Newsletter | Sent from (must match `ALLOWED_SENDERS` in `Code.gs`) |
+| Newsletter | Sent from (any ncssm.edu address is saved: `ALLOWED_DOMAINS` in `Code.gs`) |
 | --- | --- |
 | Catalyst | `communications@ncssm.edu` |
 | NCSSM-Durham Update | `terry.lynch@ncssm.edu` |
 | NCSSM-Morganton Update | `kevin.baxter@ncssm.edu` |
+| NCSSM Foundation newsletter | `giving@ncssm.edu` |
 | Extended Learning Update | not known yet: see step 7 |
 
 Also add the address to the **NCSSM Alumni Network** list
@@ -72,8 +73,8 @@ Nothing is written. Check the list looks right.
 ## 7. Later
 
 - **A newsletter isn't being saved.** Open `_heartbeat.json`. Its `ignored`
-  list shows every NCSSM address the script skipped. Add the right one to
-  `ALLOWED_SENDERS` here, merge, and paste the new `Code.gs`.
+  list shows every NCSSM address the script skipped. Any ncssm.edu sender is saved already. For
+  a sender outside ncssm.edu, add it to `ALLOWED_SENDERS` here, merge, and paste the new `Code.gs`.
 - **Updating the script.** The script isn't deployed from GitHub: after a
   merge, paste the changed files into the editor and save. The `DRY_RUN`
   and `INBOX_FOLDER_ID` Script Properties survive a paste.

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Collects NCSSM news (newsletters, ncssm.edu, press) for Yakkety's weekly NCSSM News digest.",
   "scripts": {
-    "test": "node test/run-tests.js && node test/collector.test.js && node test/alumni.test.js && node test/digest.test.js",
+    "test": "node test/run-tests.js && node test/collector.test.js && node test/alumni.test.js && node test/digest.test.js && node test/apps-script-safety.test.js && node test/collector-contract.test.js",
     "alumni": "node collector/alumni.js --out data/notable-alumni.json"
   }
 }

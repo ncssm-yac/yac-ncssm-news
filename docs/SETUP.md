@@ -34,7 +34,7 @@ No Gmail filters or labels are needed: the script decides what to save.
 ## 3. Create the script
 
 1. Signed in as ncssm.yac.yakkety@gmail.com, open <https://script.google.com>
-   and create a project named **NCSSM News inbox**.
+   and create a project named **NCSSM YAC News**.
 2. Project Settings → tick **Show "appsscript.json" manifest file in editor**.
 3. Replace `appsscript.json` with `apps-script/appsscript.json` from this repo.
 4. Replace `Code.gs` with `apps-script/Code.gs`. Add a script file named
@@ -85,7 +85,7 @@ Nothing is written. Check the list looks right.
   change to `apps-script/` runs the **Apps Script** workflow
   (`.github/workflows/apps-script.yml`, through YAC's shared deploy in
   `ncssm-yac/yac-apps-script-deploy`), which tests, `clasp push`es to
-  **NCSSM News inbox**, and checks the live code matches. Don't edit the code
+  **NCSSM YAC News**, and checks the live code matches. Don't edit the code
   in the editor: the daily check goes red if the live copy differs from the
   repo. Script Properties (`DRY_RUN`, `INBOX_FOLDER_ID`, `FORWARD_SENDERS`)
   and the trigger aren't code, so a deploy never touches them.

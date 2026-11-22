@@ -4,7 +4,7 @@ Collection for NCSSM News, Yakkety's weekly digest of NCSSM news for YAC.
 Deterministic code only: no model calls, prompts or agent logic here (those
 live in `ncssm-yac/yakkety`, `ncssm-news` skill).
 
-- `apps-script/` runs in ncssm.yac.yakkety@gmail.com as **NCSSM News inbox**,
+- `apps-script/` runs in ncssm.yac.yakkety@gmail.com as **NCSSM YAC News**,
   and deploys on merge through `.github/workflows/apps-script.yml` (YAC's
   shared deploy). Never edit it in the editor. Keep its scopes to
   `gmail.readonly` and `drive.file`; it must never send, label or delete

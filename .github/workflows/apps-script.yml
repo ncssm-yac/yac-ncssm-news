@@ -1,12 +1,12 @@
 name: Apps Script
 
-# Keeps the NCSSM News inbox Apps Script (apps-script/) in step with this
+# Keeps the NCSSM YAC News Apps Script (apps-script/) in step with this
 # repo, through YAC's shared deploy (ncssm-yac/yac-apps-script-deploy).
 # GitHub is the only source of truth: nobody pastes code into the editor.
 #
 # - Pull request: tests only.
 # - Merge to main touching apps-script/ (or Run workflow): tests, `clasp push`
-#   to "NCSSM News inbox", then the drift check. Script Properties (DRY_RUN,
+#   to "NCSSM YAC News", then the drift check. Script Properties (DRY_RUN,
 #   INBOX_FOLDER_ID, FORWARD_SENDERS) and the daily trigger are not code, so a
 #   deploy never touches them.
 # - Every day: drift check. Fails if the live code differs from the repo or
@@ -30,7 +30,7 @@ jobs:
   deploy:
     uses: ncssm-yac/yac-apps-script-deploy/.github/workflows/deploy.yml@main
     with:
-      title: NCSSM News inbox
+      title: NCSSM YAC News
       src_dir: apps-script
       test_command: npm test
     secrets:

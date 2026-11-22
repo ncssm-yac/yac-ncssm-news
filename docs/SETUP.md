@@ -81,9 +81,14 @@ Nothing is written. Check the list looks right.
   "Fwd:" or "Fw:" and whose original sender is an ncssm.edu address are saved,
   as the original sender, with your address removed. Never put the address in
   `Code.gs` or anywhere in GitHub.
-- **Updating the script.** The script isn't deployed from GitHub: after a
-  merge, paste the changed files into the editor and save. The `DRY_RUN`
-  and `INBOX_FOLDER_ID` Script Properties survive a paste.
+- **Updating the script.** Deployed from GitHub since Nov 22, 2026: merging a
+  change to `apps-script/` runs the **Apps Script** workflow
+  (`.github/workflows/apps-script.yml`, through YAC's shared deploy in
+  `ncssm-yac/yac-apps-script-deploy`), which tests, `clasp push`es to
+  **NCSSM News inbox**, and checks the live code matches. Don't edit the code
+  in the editor: the daily check goes red if the live copy differs from the
+  repo. Script Properties (`DRY_RUN`, `INBOX_FOLDER_ID`, `FORWARD_SENDERS`)
+  and the trigger aren't code, so a deploy never touches them.
 - **Pausing.** Set `DRY_RUN` to `true`, or delete the trigger.
 - **Failure emails** go to this account, which nobody reads. The YAC monitor
   watches `_heartbeat.json` instead (stale, or `errors` above 0).

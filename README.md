@@ -175,7 +175,9 @@ Node only, no packages. Expected: `ALL PASSED (47 checks)`,
 
 ## Deploy
 
-Paste-deployed, like the meeting notes relocator: see
+The Apps Script deploys from GitHub on merge, through YAC's shared deploy
+(`ncssm-yac/yac-apps-script-deploy`), with a daily check that the live code
+matches the repo. One-time setup of the account, script and trigger:
 [docs/SETUP.md](docs/SETUP.md).
 
 ## Contacts

@@ -41,7 +41,7 @@
 // CONFIGURATION
 // ---------------------------------------------------------------------------
 
-var VERSION = '1.2.0';
+var VERSION = '1.3.0';
 var SCHEMA = 1;                    // bump when the saved JSON shape changes
 
 var DRY_RUN = true;                // default only; the DRY_RUN Script Property wins
@@ -141,9 +141,13 @@ function isForwardSubject_(subject) {
   return /^\s*(fwd?|fw)\s*:/i.test(String(subject || ''));
 }
 
-/** The "From:" of the first forwarded message in a body, as { name, email } or null. */
+/**
+ * The "From:" of the first forwarded message in a body, as { name, email } or
+ * null. Knows Gmail's "---------- Forwarded message ---------" and Apple
+ * Mail's "Begin forwarded message:" (a colon, then a blank line before From:).
+ */
 function forwardedOriginalSender_(text) {
-  var m = String(text || '').match(/forwarded message[\s\-_]*\r?\n\s*from:[ \t]*([^\r\n]+)/i);
+  var m = String(text || '').match(/forwarded message[\s\-_:]*\r?\n\s*from:[ \t]*([^\r\n]+)/i);
   if (!m) return null;
   var a = parseAddress_(m[1].trim());
   return a.email && a.email.indexOf('@') > 0 ? a : null;
@@ -277,12 +281,20 @@ function extractLinks_(html, maxLinks) {
 
 /**
  * Plain-text body with junk links removed (inline "<url>" and bare URLs),
- * whitespace tidied and length capped.
+ * whitespace tidied and length capped. As in extractLinks_, a link is judged
+ * by its URL and by its text: in plain text, the words between the previous
+ * link (or the start of the line) and this one, so "Update Profile <url>"
+ * loses its URL even when the URL itself looks harmless.
  */
 function cleanText_(text, maxChars) {
-  var s = String(text || '')
-    .replace(/<(https?:\/\/[^>\s]+)>/gi, function (all, url) { return isJunkLink_(url, '') ? '' : all; })
-    .replace(/https?:\/\/[^\s<>"]+/gi, function (url) { return isJunkLink_(url, '') ? '' : url; });
+  var s = String(text || '').split('\n').map(function (line) {
+    var last = 0;
+    return line.replace(/<(https?:\/\/[^>\s]+)>|https?:\/\/[^\s<>"]+/gi, function (all, bracketed, offset) {
+      var label = line.slice(last, offset);
+      last = offset + all.length;
+      return isJunkLink_(bracketed || all, label) ? '' : all;
+    });
+  }).join('\n');
   s = tidyWhitespace_(s);
   if (s.length > maxChars) s = s.slice(0, maxChars) + '\n[truncated]';
   return s;
@@ -416,6 +428,12 @@ function saveNewslettersLocked_() {
   var stats = newStats_();
   var forwarders = parseForwardSenders_(props.getProperty(FORWARD_KEY));
 
+  // Anything that stops the whole run (Gmail down, a quota) is caught so the
+  // heartbeat below still says so, then thrown again. A Drive error listing
+  // the folder above stops the run before this point: with no listing, the
+  // heartbeat can't be found to rewrite, and a stale one is alerted on anyway.
+  var runError = null;
+  try {
   var ids = listMessageIds_(buildQuery_(LOOKBACK_DAYS));
   for (var i = 0; i < ids.length; i++) {
     if (Date.now() - started > MAX_RUN_MS) {
@@ -471,10 +489,16 @@ function saveNewslettersLocked_() {
       Logger.log('FAILED message ' + id + ': ' + (e && e.message ? e.message : e));
     }
   }
+  } catch (e) {
+    runError = e;
+    noteError_(stats, 'run', e);
+    Logger.log('RUN FAILED: ' + (e && e.message ? e.message : e));
+  }
 
   var heartbeat = buildHeartbeat_(stats, new Date().toISOString());
   Logger.log('Heartbeat: ' + JSON.stringify(heartbeat));
   if (!dryRun) writeHeartbeat_(folderId, files, heartbeat);
+  if (runError) throw runError;
   if (stats.errors > 0) throw new Error(stats.errors + ' message(s) failed to save: ' + stats.errorSamples.join(' | '));
 }
 

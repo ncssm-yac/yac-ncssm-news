@@ -98,10 +98,11 @@ async function ncssmEvents({ http, today, opts, year }) {
   const links = lib.parseEventLinks(res.text);
   if (!links.length) return { ok: false, error: 'no events found on ncssm.edu/events (did the page layout change?)', items: [] };
   const items = [];
-  let undated = 0;
-  await pool(links.slice(0, opts.maxEvents), 4, async (l) => {
+  let undated = 0, unread = 0;
+  const wanted = links.slice(0, opts.maxEvents);
+  await pool(wanted, 4, async (l) => {
     const page = await http.get(l.url, { retries: 1 });
-    if (!page.ok) return;
+    if (!page.ok) { unread++; return; }
     const e = lib.parseEventPage(page.text, year);
     if (!e.start) { undated++; return; }
     items.push({
@@ -109,7 +110,11 @@ async function ncssmEvents({ http, today, opts, year }) {
       start: e.start, end: e.end, when: e.when, location: e.location, moreInfo: e.link, text: e.text, textFetched: !!e.text
     });
   });
-  return { ok: true, items, note: links.length + ' listed' + (undated ? ', ' + undated + ' without a date' : '') };
+  const note = links.length + ' listed' + (undated ? ', ' + undated + ' without a date' : '') +
+    (unread ? ', ' + unread + ' could not be read' : '');
+  // A source it can't read is an error, not an empty list.
+  if (unread === wanted.length) return { ok: false, error: 'no event page on ncssm.edu could be read', items, note };
+  return { ok: true, items, note };
 }
 
 async function googleNews({ http }) {

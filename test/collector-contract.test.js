@@ -140,7 +140,7 @@ const run = (opts) => collect(Object.assign({ env: ENV, now: NOW, fetch: web(), 
     assert.deepStrictEqual(r.items.map((i) => i.kind), ['newsletter']);
   });
 
-  await test('FINDING: an event page that cannot be read is reported, not dropped silently', async () => {
+  await test('an event page that cannot be read is reported, not dropped silently', async () => {
     // Tool bug: ncssmEvents skips an event page that fails to load (`if (!page.ok) return;`)
     // without counting it. The source reports ok with no mention of the missing
     // event, unlike articles, whose unread pages are counted in the source note.

@@ -207,8 +207,8 @@ test('a plain-text unsubscribe link is removed from the saved text', () => {
   assert.ok(!/pid=233|p=un&/.test(out), 'no unsubscribe URL in the text');
 });
 
-test('FINDING: a plain-text "Update Profile" link is never saved', () => {
-  // Tool bug: cleanText_ judges each bare URL by the URL alone, so a plain-text
+test('a plain-text "Update Profile" link is never saved', () => {
+  // Regression (yac-ncssm-news#12, fixed in v1.3.0). Was: cleanText_ judges each bare URL by the URL alone, so a plain-text
   // "Update Profile <url>" line keeps a Constant Contact update-profile link
   // (do?p=oo). The README and CLAUDE.md promise update-profile links are
   // never saved. The HTML path is fine: extractLinks_ also reads the link text.
@@ -224,6 +224,15 @@ test('FINDING: a plain-text "Update Profile" link is never saved', () => {
   const rec = JSON.parse(env.saved()[0].content);
   assert.ok(!/p=oo/.test(rec.text), 'the update-profile URL is in the saved text: ' + rec.text.replace(/\n/g, ' | '));
   assert.ok(!rec.links.some((l) => /p=oo/.test(l.url)), 'and not in links');
+});
+
+test('a plain-text story link next to an update-profile link is kept', () => {
+  const c = load();
+  c.__t = 'Read more <https://www.ncssm.edu/news/story-1>\nUpdate Profile <https://visitor.constantcontact.com/do?p=oo&m=001> | Story two https://www.ncssm.edu/news/story-2';
+  const out = vm.runInContext('cleanText_(__t, 1000)', c);
+  assert.ok(out.includes('https://www.ncssm.edu/news/story-1'), out);
+  assert.ok(out.includes('https://www.ncssm.edu/news/story-2'), out);
+  assert.ok(!/p=oo/.test(out), out);
 });
 
 test('a body far over the cap is cut and marked, not saved whole', () => {
@@ -251,8 +260,8 @@ test('a forward in Gmail\'s own "Forwarded message" form is saved from the origi
   assert.ok(!JSON.stringify(rec).includes('owner.fake@example.test'), 'the forwarder is not saved');
 });
 
-test('FINDING: a forward in Apple Mail\'s "Begin forwarded message" form is saved, not silently dropped', () => {
-  // Tool bug: forwardedOriginalSender_ only knows the Gmail header form
+test('a forward in Apple Mail\'s "Begin forwarded message" form is saved, not silently dropped', () => {
+  // Regression (yac-ncssm-news#12, fixed in v1.3.0). Was: forwardedOriginalSender_ only knows the Gmail header form
   // ("---------- Forwarded message ---------"). An Apple Mail forward has
   // "Begin forwarded message:" and is ignored, and the heartbeat reports it as
   // "forward (not from NCSSM)" although the original sender is NCSSM.
@@ -311,8 +320,8 @@ test('a Drive error while listing the folder stops the run before any mail is re
   assert.strictEqual(env.created, 0);
 });
 
-test('FINDING: a Gmail error that stops the whole run still leaves the heartbeat saying so', () => {
-  // Tool bug: the file header promises that every live run rewrites
+test('a Gmail error that stops the whole run still leaves the heartbeat saying so', () => {
+  // Regression (yac-ncssm-news#12, fixed in v1.3.0). Was: the file header promises that every live run rewrites
   // _heartbeat.json with its errors. When Gmail itself fails the run throws
   // before the heartbeat is written, so the folder keeps yesterday's heartbeat
   // (no error). The collector only notices after 30 hours, and the failure
